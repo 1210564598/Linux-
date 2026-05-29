@@ -211,7 +211,7 @@ gcc 文件名.c -o 生成的程序名
 
 ------
 
-## 六、输入输出函数
+## **六、****输入输出函数
 
 ### printf基础用法
 
@@ -606,6 +606,513 @@ int main(){
 		putchar(a4);
 		putchar(a5);
 	
+		
+		return 0;
+	}
+```
+
+# 第三章流程控制
+
+<img src="F:\Linux嵌入式开发\C学习\笔记\流程控制.png" alt="流程控制" style="zoom:33%;" />
+
+## 一、程序流程结构
+
+- **顺序结构**：从上到下依次执行
+- **选择结构**：满足条件才执行某段代码
+- **循环结构**：满足条件就重复执行
+
+------
+
+## 二、选择结构（判断）
+
+### 1. if 语句
+
+#### （1）单分支
+
+```
+if(条件)
+{
+    语句;
+}
+```
+
+条件为真，执行大括号里代码。
+
+#### （2）双分支
+
+```
+if(条件)
+{
+    语句1;
+}
+else
+{
+    语句2;
+}
+```
+
+#### （3）多分支
+
+```
+if(条件1) {}
+else if(条件2) {}
+else if(条件3) {}
+else {}
+```
+
+#### （4）if 嵌套
+
+if 里面再写 if/else，用于多层判断。
+
+------
+
+### 2. 逻辑运算符
+
+- **&& 与**：两个条件都真才真
+- **|| 或**：一个真就真
+- **! 非**：取反
+
+示例：
+
+```
+if(age>=18 && score>=60)
+```
+
+------
+
+### 3. switch…case 语句
+
+适合**固定值匹配**，比如成绩等级、菜单选择。
+
+```
+switch(变量)
+{
+    case 值1: 语句; break;
+    case 值2: 语句; break;
+    default: 都不满足执行;
+}
+```
+
+**必须写 break**，否则会 “穿透” 执行。
+
+------
+
+## 三、循环结构
+
+### 1. while 循环
+
+先判断，后执行。
+
+```
+while(条件)
+{
+    循环体;
+}
+```
+
+### 2. do…while 循环
+
+先执行一次，再判断。**至少执行 1 次**。
+
+```
+do
+{
+    循环体;
+} while(条件);
+```
+
+### 3. for 循环（最常用）
+
+适合**已知循环次数**。
+
+```
+for(初始化; 判断条件; 更新)
+{
+    循环体;
+}
+```
+
+- 三个表达式都可省略
+- 全省略 = 死循环
+
+### 4. 循环嵌套
+
+循环里面套循环，用于打印矩阵、表格。
+
+------
+
+## 四、跳转语句
+
+- **break**：跳出**整个循环 /switch**
+- **continue**：跳过本次，直接进入下一次循环
+
+------
+
+## 五、练习代码
+
+### if示例
+
+```c
+//示例1：
+    #include<stdio.h>
+	int main(){
+		//if判断练习1
+		int money;
+		printf("请问你有多钱：");
+		scanf("%d",&money);
+		if(money>100){
+			
+			puts("你是个有钱人");
+		}
+		printf("测试完成\n");
+		printf("测试结果%d",money>100);
+		return 0;
+	}
+```
+
+```c
+//示例2：
+#include<stdio.h>
+	int main(){
+		int atHomeYesNO;
+		puts("你是否在家,输入一在家输入二不在");
+		scanf("%d",&atHomeYesNO);
+		
+		if(atHomeYesNO==1){
+			
+			printf("扑到你");
+		}
+		puts("xxxx");
+		
+	}
+```
+
+```c
+//示例3
+#include<stdio.h>
+	int main(){
+		int data1;
+		int data2;
+		int datatmp;
+		
+		printf("请输入两个数字:从小到大排");
+		scanf("%d %d",&data1,&data2);
+		if(data1>data2){
+			printf("=====\n");
+			datatmp=data1;//data1>data2时 进入
+			data1=data2;
+			data2=datatmp;
+		}
+		printf("%d %d",data1,data2);
+		
+	}
+```
+
+
+
+```
+//逻辑运算符
+#include<stdio.h>
+	int main(){
+		int rich;
+		int handsome;
+		int spend;
+		printf("你是否富裕 富裕扣1 不富裕扣0\n");
+		scanf("%d",&rich);
+		if(rich!=1){
+			
+			puts("我们不合适");
+			return -1;
+		}
+		printf("你是否帅气 帅气 扣1 不帅气 扣0\n");
+		scanf("%d",&handsome);
+		
+		printf("你是否给我花钱 花钱扣1 不花钱扣0\n");
+		scanf("%d",&spend);
+		
+			if(handsome==1&&spend==1){
+			
+			puts("我要嫁给你");
+		}	else{
+			printf("我们不合适捏");
+		}		
+			
+		return 0;
+	}
+```
+
+
+
+#### 2、if   else输入一个字符，大转小
+
+```
+#include<stdio.h>
+	int main(){
+		char ca;
+		puts("请输入一个字符");
+		scanf("%c",&ca);
+		
+		if(ca>=65&&ca<=90){
+			ca=ca+32;
+			printf("%c",ca);
+		}else if(ca>=97&&ca<=122){
+			printf("%c",ca);
+		}else{
+			puts("输入异常");
+		}
+		
+		
+		return 0;
+		
+	}
+```
+
+#### 用 switch 算商品折扣
+
+```
+#include<stdio.h>
+	int main(){
+	float zhekou;
+	int s;
+	puts("请输入的要购买的商品价值");
+	scanf("%d",&s);
+	if(s>0&&s<250){
+		puts("没有折扣");
+		
+	}
+	else if(s>=250&&s<500){
+		zhekou=0.02;
+		printf("折扣为%.2f\n",zhekou);
+	}
+	else if(s>=500&&s<1000){
+		zhekou=0.05;
+		printf("折扣为%.2f\n",zhekou);
+		
+	}
+	else if(s>=1000&&s<2000){
+		zhekou=0.08;
+		printf("折扣为%.2f\n",zhekou);
+	}
+	else if(s>=2000&&s<3000){
+		zhekou=0.10;
+		printf("折扣为%.2f\n",zhekou);
+	}
+	else{
+	 zhekou=0.15;
+		printf("折扣为%f\n",zhekou);
+	}
+	
+		return 0;
+}
+```
+
+#### 函数判断输入x的值，输出y相应的值
+
+```
+#include<stdio.h>
+	int main(){
+		int x;
+		int y;
+		printf("请输入一个数字");
+		scanf("%d",&x);
+		if(x<1){
+		   y=x;
+			printf("y=%d",y);
+		}
+		
+		else if(x>=1&&x<10){
+			y=(2*x-1);
+			printf("y=2*%d-1=%d",x,y);
+		}
+		
+		else if(x>=10){
+			y=(3*x-11);
+			printf("y=3*%d-11=%d",x,y);
+		}	
+		
+		return 0;
+	}
+```
+
+
+
+### for 循环 
+
+打印矩阵
+
+```
+#include<stdio.h>
+	int main(){
+		
+		for(int i=1;i<=4;i++){
+			for(int j=1;j<=5;j++){
+				printf("%d ",i*j);
+				
+			}
+			printf("\n");
+		}
+		
+		return 0;
+	}
+```
+
+
+
+#### 1~100 求和
+
+```
+#include<stdio.h>
+int main()
+{
+    int sum=0;
+    for(int i=1;i<=100;i++)
+    {
+        sum=sum+i;
+    }
+    printf("%d",sum);
+    return 0;
+}
+```
+
+#### 嵌套循环
+
+### break 与 continue
+
+```
+// break：到5就停止
+for(int i=1;i<=10;i++){
+    if(i==5) break;
+    printf("%d ",i);
+}
+
+// continue：跳过5，继续后面
+for(int i=1;i<=10;i++){
+    if(i==5) continue;
+    printf("%d ",i);
+}
+```
+
+
+
+## 六、作业
+
+1. 输入三个数，从小到大输出
+
+   ```
+   #include<stdio.h>
+   	int main(){
+   		int a,b,c;
+   		int tmp;
+   		printf("请输入三个数字");
+   		scanf("%d %d %d",&a,&b,&c);
+   
+   		if(a>b){
+   		 tmp=a;
+   		 a=b;
+   		 b=tmp;//此时a的值小于b的值
+   		}
+   		if(a>c){
+   		 tmp=c;
+   		 a=c;
+   		 c=tmp;//此时a的值小于c的值
+   		}
+   		if(b>c){
+   		 tmp=b;
+   		 b=c;
+   		 c=tmp;
+   		}
+   		
+   		printf("%d %d %d ",a,b,c);
+   		
+   		return 0;
+   	}
+   ```
+
+   2、成绩分级
+
+   ```
+   #include<stdio.h>
+   	int main(){
+   		int score;
+   		int dengji;
+   		
+   		printf("请输入一个你的成绩：");
+   		scanf("%d",&score);
+   		if(score>=90&&score<=100){
+   			puts("你的成绩为A");
+   		}else if(score>=80&&score<=89){
+   			puts("你的成绩为B");
+   		}else if(score>=70&&score<=79){
+   			puts("你的成绩为C");
+   		}else if(score>=60&&score<=69){
+   			puts("你的成绩为D");
+   		}else if(score<=60&&score>=0){
+   			puts("你的成绩为E");
+   		}else{
+   			puts("输入的成绩非法，请重新输入");
+   		}
+   		
+   		return 0;
+   	}
+   ```
+
+   
+
+   
+
+2. 输入两个正整数m和n求其最大公约数和最小公倍数
+
+   **最大公约数（GCD）**
+
+   能同时整除 m 和 n 的**最大正整数**
+
+   例：12 和 18 → 最大公约数是 **6**
+
+   **最小公倍数（LCM）**
+
+   能同时被 m 和 n 整除的**最小正整数**
+
+   公式：**最小公倍数 = m × n / 最大公约数**
+
+   ```
+   #include<stdio.h>
+   	int main(){
+   		int m,n;
+   		int max;
+   		printf("请输入两个数字");
+   		scanf("%d %d",&m,&n);
+   		//最大公约数
+   		for(int i=1;m>=i&&n>=i;i++){
+   			
+   			if(m%i==0&&n%i==0){
+   			
+   			max=i;
+   		
+   		}	
+   		}
+   		printf("%d\n",max);
+   		//最小公倍数
+   
+   		printf("%d",m*n/max);
+   		return 0;
+   	}
+   ```
+
+   
+
+3. 求水仙花数/公式：`百位³ + 十位³ + 个位³ = 原数`
+
+```
+#include<stdio.h>
+	int main(){
+		for(int i=999;i>100;i--){	
+		int c=i%10;
+		int b=i/10%10;
+		int a= i/100;
+			
+		if(a*a*a+b*b*b+c*c*c==a*100+b*10+c)
+			printf("水仙花数%d\n",i);
+		}
 		
 		return 0;
 	}
