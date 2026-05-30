@@ -1118,3 +1118,240 @@ for(int i=1;i<=10;i++){
 	}
 ```
 
+# 第四章 数组
+
+## 一、数组是什么
+
+- **数组**：把**多个相同类型**的数据，按顺序存在一段**连续内存**里。
+
+- 作用：统一管理一批数据，不用定义很多变量。
+
+- 例子：10 个学生成绩 → int score [10];
+
+- `sizeof(数组)` → **总字节数**
+
+  `sizeof(数组[0])` → **一行 / 一个元素的字节**
+
+  **数组长度 = 总字节 / 单个字节**
+
+------
+
+## 二、一维数组
+
+### 1. 定义
+
+```
+类型 数组名[元素个数];
+```
+
+```
+int a[10];    // 整型数组，10个元素
+char b[20];   // 字符数组
+float c[5];   // 浮点数组
+```
+
+### 2. 下标（编号）
+
+- 从 **0 开始**
+- a [0] 第 1 个
+- a [1] 第 2 个
+- ...
+- a [9] 第 10 个
+
+### 3. 初始化
+
+```
+int a[5] = {1, 2, 3, 4, 5};   // 全部赋值
+int a[5] = {1, 2};            // 部分赋值，后面补0
+int a[5] = {0};               // 全部清零
+int a[]  = {1,2,3,4};         // 自动算长度
+for(int i=0; i<5; i++){       //循环初始化
+    a[i]=i;
+}
+```
+
+### 4. 遍历（最常用）
+
+```
+int a[5] = {1,2,3,4,5};
+for(int i=0; i<5; i++){
+    printf("%d ", a[i]);
+}
+```
+
+------
+
+## 三、二维数组
+
+### 1. 定义
+
+```
+类型 数组名[行][列];
+```
+
+例如：
+
+```
+int a[2][3];  // 2行3列，共6个元素
+```
+
+### 2. 理解
+
+- 可以看成**表格**
+- 本质是：**数组里面装数组**
+
+### 3. 初始化
+
+```
+int a[2][3] = {
+    {1,2,3},
+    {4,5,6}
+};
+
+int k=0;
+for(int i=0; i<2; i++){
+    for(int j=0; j<3; j++){
+        a[i][j]=k++;
+    }
+}
+```
+
+### 4. 遍历（双层循环）
+
+```
+for(int i=0; i<2; i++){
+    for(int j=0; j<3; j++){
+        printf("%d ", a[i][j]);
+    }
+}
+```
+
+------
+
+## 四、数组经典操作（必背）
+
+### 1. 数组逆序
+
+```
+#include<stdio.h>
+int main(){
+		int arry[5];
+		for(int i=0;i<5;i++){
+			arry[i]=i;
+		}
+		
+		for(int i=0;i<5;i++){
+			printf("%d",arry[i]);
+			
+		}
+		puts("\n");
+		for(int i=5;i>0;i--){
+			printf("%d",arry[i]);
+			
+		}
+	
+}
+```
+
+### 2. 求最大值
+
+```
+#include<stdio.h>
+int main(){
+	int arry[5]={5,6,41,12,16};
+	int max=arry[0];
+	
+	for(int i=0;i<5;i++){
+		if(arry[i]>max){
+			max=arry[i];
+		}
+	}
+	printf("%d",max);
+	
+	
+}
+```
+
+### 3. 冒泡排序（从小到大）
+
+冒泡排序 = 相邻两个数两两比较，大的往后挪 → 像气泡一样往上浮 → 每轮冒出一个最大数到末尾！
+
+```
+#include<stdio.h>
+	int main(){
+		int arry[5]={5,13,15,10,4};
+		int tmp=0;
+		int len=sizeof(arry)/sizeof(arry[0]);
+		for(int i=0;i<len;i++){//遍历数据
+			for(int j=0;j<len-i-1;j++){//交换数据次数
+			if(arry[j]>arry[j+1]){
+				tmp=arry[j];
+				arry[j]=arry[j+1];
+				arry[j+1]=tmp;
+			}
+			}
+			
+		}
+		for(int i=0;i<len;i++){
+			printf("%d ",arry[i]);
+		}
+		
+		return 0;
+	}
+```
+
+### 4.选择排序法
+
+简单选择排序 = 每一轮挑出最大 / 最小值 → 放到正确的位置 → 只交换一次！
+
+```
+#include<stdio.h>
+int main(){
+	int arry[]={4,31,21,15,6,12,15};
+	int tmp;
+	int len=sizeof(arry)/sizeof(arry[0]);
+	int max=arry[0];
+	for(int i=0;i<len-1;i++){
+		
+		for(int j=i+1;j<len;j++){
+			if(arry[j]>arry[max]){  //更新位置
+			max=j;
+			}	
+		}
+		tmp=arry[i];
+		arry[i]=arry[max];
+		arry[max]=tmp;
+		
+		
+	}
+		printf("排序后：");
+	for(int i=0; i<len; i++){
+		printf("%d ", arry[i]);
+	}
+	return 0;
+}	
+```
+
+
+
+### 5. 斐波那契数列
+
+```
+#include<stdio.h>
+int main()
+{
+	int arry[10];
+	arry[0]=1;
+	arry[1]=1;
+	for(int i=2;i<10;i++){
+		arry[i]=arry[i-1]+arry[i-2];
+		
+	}
+	
+	for(int i=0;i<10;i++){
+		
+		printf("%d\t",arry[i]);
+	}
+	
+}
+```
