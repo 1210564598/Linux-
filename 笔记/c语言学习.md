@@ -1228,7 +1228,7 @@ for(int i=0; i<2; i++){
 
 ------
 
-## 四、数组经典操作（必背）
+## 四、数组经典操作
 
 ### 1. 数组逆序
 
@@ -1314,7 +1314,7 @@ int main(){
 	for(int i=0;i<len-1;i++){
 		
 		for(int j=i+1;j<len;j++){
-			if(arry[j]>arry[max]){  //更新位置
+			if(arry[j]>arry[max]){  
 			max=j;
 			}	
 		}
@@ -1331,8 +1331,6 @@ int main(){
 	return 0;
 }	
 ```
-
-
 
 ### 5. 斐波那契数列
 
@@ -1355,3 +1353,442 @@ int main()
 	
 }
 ```
+
+# 第五章 函数 
+
+（包含：定义、声明、调用、参数、返回值、局部 / 全局变量、递归、数组参数、经典例题）
+
+------
+
+## 一、本章核心一句话
+
+**函数 = 具有独立功能的代码块 → 封装、复用、模块化**
+
+C 程序的入口是 `main()` 函数，所有功能都可以拆成函数。
+
+------
+
+## 二、函数的完整结构
+
+```
+返回值类型  函数名( 形式参数列表 )
+{
+    函数体语句;
+    return 返回值;
+}
+```
+
+### 1. 返回值类型
+
+- 函数执行完要**带回的值的类型**
+- `int` `float` `char` `void`（无返回值）
+- 无返回值必须写 `void`，不能省略
+
+### 2. 函数名
+
+- 见名知意：`getMax` `add` `sort`
+- 命名规则同变量：字母、数字、下划线，不能数字开头
+
+### 3. 形式参数（形参）
+
+- 函数**接收**外部数据用的变量
+- 可以 0 个、1 个、多个
+- 格式：`类型 变量名, 类型 变量名`
+
+### 4. 函数体
+
+实现功能的代码
+
+### 5. return
+
+- 结束函数
+- 带回返回值
+- `void` 函数可以没有 `return`，或写 `return;`
+
+------
+
+## 三、函数的分类
+
+1. **库函数**：系统提供（printf、scanf、strlen、malloc 等）
+2. **自定义函数**：自己写
+
+------
+
+## 四、函数的 3 个关键步骤
+
+### 1. 函数声明（原型声明）
+
+告诉编译器：这个函数存在，长这样。
+
+```
+int add(int a, int b);
+```
+
+- 声明可以写多次，定义只能写一次
+- 函数写在 main 后面**必须声明**
+
+### 2. 函数定义
+
+真正写函数功能
+
+```
+int add(int a, int b)
+{
+    return a + b;
+}
+```
+
+### 3. 函数调用
+
+使用函数
+
+```
+int res = add(10, 20);
+```
+
+------
+
+## 五、形式参数（形参）vs 实际参数（实参）
+
+### 1. 形参
+
+- 定义函数时的变量：`int add(int a, int b)`
+- 调用时才分配内存
+- 只在函数内部有效
+
+### 2. 实参
+
+- 调用时传的常量、变量、表达式
+
+```
+int x = 10, y = 20;
+add(x, y);
+```
+
+### 3. 参数传递方式：**值传递**
+
+- 把实参的值**拷贝**给形参
+- **函数内修改形参，不会影响实参！**
+- 单向传递：实参 → 形参
+
+------
+
+## 六、return 语句用法
+
+### 1. 有返回值
+
+```
+int add(int a, int b)
+{
+    return a + b;
+}
+```
+
+### 2. 无返回值（void）
+
+```
+void fun()
+{
+    printf("hello");
+    // 不需要 return
+}
+```
+
+```
+void fun()
+{
+    if(...) return;  // 直接退出函数
+    printf("hello");
+}
+```
+
+------
+
+## 七、函数调用的 3 种形式
+
+### 1. 普通调用
+
+```
+int m = getMax(3, 5);
+```
+
+### 2. 嵌套调用
+
+函数里调用另一个函数
+
+```
+int fun1() { return 1; }
+int fun2() { return fun1() + 2; }
+```
+
+### 3. 递归调用
+
+函数自己调用自己
+
+```
+int fact(int n)
+{
+    if(n == 1) return 1;
+    return n * fact(n-1);
+}
+```
+
+**必须有结束条件，否则死循环**
+
+------
+
+## 八、局部变量 vs 全局变量
+
+### 1. 局部变量
+
+- 定义在**函数 / 复合语句**内部
+- 作用域：当前 {} 内
+- 生命周期：函数调用时创建，结束销毁
+- 无默认值（随机值）
+
+### 2. 全局变量
+
+- 定义在**所有函数外部**
+- 作用域：整个源文件
+- 生命周期：整个程序运行期
+- 默认值为 0
+
+示例：
+
+```
+int g_x = 100;  // 全局
+
+void fun()
+{
+    int a = 10; // 局部
+}
+```
+
+------
+
+## 九、数组作函数参数
+
+### 1. 数组名作为参数 → 传递的是**首地址**
+
+```
+void printArr(int arr[], int len)
+{
+    for(int i=0; i<len; i++)
+        printf("%d ", arr[i]);
+}
+```
+
+调用：
+
+```
+int a[5] = {1,2,3,4,5};
+printArr(a, 5);
+```
+
+特点：
+
+- 函数内修改数组，**实参数组会跟着变**
+
+### 2. 二维数组作参数
+
+```
+void fun(int arr[][3], int row)
+{
+}
+```
+
+**列数不能省略！**
+
+------
+
+## 十、作业/练习
+
+### 作业
+
+#### 1. 10个数字找到最大以及下标//找最大
+
+```
+#include<stdio.h>
+
+void iniArr(int arr[],int len){  //初始化
+	printf("请输入10个数字\n");
+	for(int i=0;i<len;i++){
+		scanf("%d",&arr[i]);
+	}
+}
+
+void PriArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+		printf("%d ",arr[i]);
+		
+	}	
+	printf("\n");
+}
+
+int findmaxArr(int arr[],int len,int *xiabiao){
+	int max=arr[0];
+	*xiabiao=0;
+	for(int i=1;i<len;i++){
+			if(arr[i]>max){
+
+				max=arr[i];
+				*xiabiao=i;
+			}
+		}
+			return max;
+	
+
+	
+}
+
+int main(){
+	int arr[10];
+    int len=sizeof(arr)/sizeof(arr[0]);
+	int index;
+	iniArr(arr,len);
+	PriArr(arr,len);
+	int maxVA=findmaxArr(arr,len,&index);
+
+ printf("最大值：%d，下标：%d\n", maxVA, index);
+	
+
+	return 0;
+}
+```
+
+#### 2. 冒泡排序封装成函数
+
+```
+
+#include<stdio.h>
+
+void PriArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+		printf("%d ",arr[i]);
+	}
+	
+}
+
+void mpPaixu(int arr[],int len){
+	int tmp;
+	for(int i=0;i<len;i++){
+		for(int j=0;j<len-1-i;j++){
+			if(arr[j+1]>arr[j]){
+				tmp=arr[j];
+				arr[j]=arr[j+1];
+				arr[j+1]=tmp;
+			}
+		}
+	}
+	
+}
+
+
+int main(){
+	int arr[5]={2,6,45,95,6};
+	int len=sizeof(arr)/sizeof(arr[0]);
+	mpPaixu(arr,len);
+	PriArr(arr,len);
+	
+	
+	return 0;
+}
+```
+
+#### 3. 简单排序封装
+
+```
+#include<stdio.h>
+
+void iniArr(int arr[],int len){  //初始化
+	printf("请输入10个数字\n");
+	for(int i=0;i<len;i++){
+		scanf("%d",&arr[i]);
+	}
+}
+
+void PriArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+		printf("%d ",arr[i]);
+		
+	}	
+	printf("\n");
+}
+
+void maxArr(int arr[],int len){
+	
+	int tmp;
+	for(int i=0;i<len-1;i++){
+		int max=i;
+		for(int j=i+1;j<len;j++){
+			if(arr[j]>arr[max]){
+				max=j;
+			}
+		}
+			tmp=arr[i];
+			arr[i]=arr[max];
+			arr[max]=tmp;
+	}
+	
+}
+
+int main(){
+	int arr[10];
+    int len=sizeof(arr)/sizeof(arr[0]);
+
+	iniArr(arr,len);
+	PriArr(arr,len);
+	maxArr(arr,len);
+	PriArr(arr,len);
+	
+	
+
+	return 0;
+}
+```
+
+### 练习
+
+#### 1.无参数有参数函数练习
+
+```
+#include<stdio.h>
+
+void Phello(){
+	printf("======");
+	printf("欢迎到家");
+}
+
+
+int add(int a,int b){
+
+	return a+b;
+}
+
+int main(){
+	Phello();
+	int x=1;
+	int y=2;
+	int ret;
+	ret=add(x,y);
+	printf("%d",ret);
+	
+	return 0;
+}
+```
+
+2.输入两个整数要求输出其最大值，用函数实现（正常比较，三目比较）
+
+3.字符比较大小
+
+4.输入四个数，函数方式找最大值
+
+5.递归![image-20260531214519002](C:\Users\12105\AppData\Roaming\Typora\typora-user-images\image-20260531214519002.png)
+
+6.递归n的阶乘
+
+7.有两个班的同学，分别是10个人和5个人，分别求这两个班的平均分
+
+8.有3x4矩阵，初始化它并输出，然后求最大值并输出
+
+9.班上10 个学生，封装一个函数，调用该函数后获得班上的平均分，最高分，最低分
