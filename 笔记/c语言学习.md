@@ -1120,6 +1120,8 @@ for(int i=1;i<=10;i++){
 
 # 第四章 数组
 
+![数组](F:\Linux嵌入式开发\C学习\笔记\数组.png)
+
 ## 一、数组是什么
 
 - **数组**：把**多个相同类型**的数据，按顺序存在一段**连续内存**里。
@@ -1356,11 +1358,11 @@ int main()
 
 # 第五章 函数 
 
-（包含：定义、声明、调用、参数、返回值、局部 / 全局变量、递归、数组参数、经典例题）
+![函数](F:\Linux嵌入式开发\C学习\笔记\函数.png)
 
 ------
 
-## 一、本章核心一句话
+## 一、函数概念
 
 **函数 = 具有独立功能的代码块 → 封装、复用、模块化**
 
@@ -1592,7 +1594,7 @@ printArr(a, 5);
 ### 2. 二维数组作参数
 
 ```
-void fun(int arr[][3], int row)
+void fun(int arr[hang][lie], int hang，int lie)
 {
 }
 ```
@@ -1777,18 +1779,505 @@ int main(){
 }
 ```
 
-2.输入两个整数要求输出其最大值，用函数实现（正常比较，三目比较）
+#### 2.输入两个整数要求输出其最大值，用函数实现（正常比较，三目比较）
 
-3.字符比较大小
+```
+#include<stdio.h>
 
-4.输入四个数，函数方式找最大值
+int ScWMax(int a,int b){
+	if(a>b){
+		return a;
+	}else{
+		return b;
+	}
+}
+int ScWMax2(int a,int b){
 
-5.递归![image-20260531214519002](C:\Users\12105\AppData\Roaming\Typora\typora-user-images\image-20260531214519002.png)
+	return a>b?a:b;
+}
 
-6.递归n的阶乘
 
-7.有两个班的同学，分别是10个人和5个人，分别求这两个班的平均分
+int main(){
+	int a;
+	int b;
+	int res;
+	scanf("%d%d",&a,&b);
+	res=ScWMax(a,b);
+	printf("%d",res);
+	
+	puts("\n===========");
+	scanf("%d%d",&a,&b);
+	res=ScWMax2(a,b);
+	printf("%d",res);
+	return 0;
+}
+```
 
-8.有3x4矩阵，初始化它并输出，然后求最大值并输出
+#### 3.字符比较大小
 
-9.班上10 个学生，封装一个函数，调用该函数后获得班上的平均分，最高分，最低分
+```
+#include<stdio.h>
+
+char CharMAX(char a,char b){
+	if(a>b){
+		return a;
+	}else{
+		return b;
+	}
+	
+}
+
+int main(){
+	char a,b;
+	char res;
+	scanf("%c %c",&a,&b);
+	res=CharMAX(a,b);
+	printf("%c\n",res);
+	
+	return 0;
+}
+```
+
+#### 4.输入四个数，函数方式找最大值
+
+```
+#include<stdio.h>
+int Maxtwo(int a,int b){
+	if(a>b){
+		return a;
+	}else{
+		return b;
+	}
+}
+
+int Maxfour(int a,int b,int c,int d){
+	int max;
+	max=Maxtwo(a,b);
+	max=Maxtwo(max,c);
+	max=Maxtwo(max,d);
+	return max;
+}
+
+int main(){
+	int a,b,c,d;
+	int res;
+	scanf("%d%d%d%d",&a,&b,&c,&d);
+	res=Maxfour(a,b,c,d);
+	printf("%d",res);
+	
+	
+	return 0;
+}
+```
+
+#### 5.递归![image-20260531214519002](C:\Users\12105\AppData\Roaming\Typora\typora-user-images\image-20260531214519002.png)
+
+```
+#include<stdio.h>
+
+int hanshu1(int n){
+	int res;
+	if(n==1){
+		res=10;
+		return res;
+	}else if(n>1){
+		res=hanshu1(n-1)+2;
+		return res;
+	}
+}
+
+int  main(){
+	int n;
+	int res;
+	scanf("%d",&n);
+	res=hanshu1(n);
+	printf("%d",res);
+	
+	return 0;
+}
+```
+
+#### 6.递归n的阶乘
+
+```
+#include<stdio.h>
+
+int hanshu2(int n){
+	int res;
+	if(n==1){
+		return 1;
+	}else if(n>1){
+		res=hanshu2(n-1)*n;
+		return res;
+	}
+	
+}
+
+int main(){
+	
+	int n;
+	int res;
+	scanf("%d",&n);
+	res=hanshu2(n);
+	printf("%d",res);
+	return 0;
+}
+```
+
+#### 7.有两个班的同学，分别是10个人和5个人，分别求这两个班的平均分
+
+```
+#include<stdio.h>
+
+void iniArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+	scanf("%d",&arr[i]);
+	}
+}
+
+void PriArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+	printf("%d ",arr[i]);
+	}
+	puts("\n");
+	
+}
+
+float pingJun(int arr[],int len){
+	int sum=0;
+	float pj;
+	for(int i=0;i<len;i++){
+	   sum=sum+arr[i];
+	}
+	pj=(float)sum/len;
+	return pj;
+}
+ 
+int main(){
+	int arr1[10];
+	int arr2[5];
+	int len1=sizeof(arr1)/sizeof(arr1[0]);
+	int len2=sizeof(arr2)/sizeof(arr2[0]);
+	
+	iniArr(arr1,len1);
+	PriArr(arr1,len1);
+	int pj;
+	pj=pingJun(arr1,len1);
+	printf("%d",pj);
+	
+	iniArr(arr2,len2);
+	PriArr(arr2,len2);
+	pj=pingJun(arr2,len2);
+	printf("%d",pj);
+	return 0;
+}
+```
+
+#### 8.有3x4矩阵，初始化它并输出，然后求最大值并输出
+
+```
+#include<stdio.h>
+
+int TwoArr(int hang,int lie,int arr[hang][lie]){
+	int max=arr[0][0];
+	for(int i=0;i<hang;i++){
+		for(int j=0;j<lie;j++){
+			if(arr[i][j]>max){
+				max=arr[i][j];
+			}
+		}
+	}
+	return max;
+	
+}
+
+int main(){
+	int arr[3][4]={{1,2,3,10},{4,5,6,11},{7,8,9,12}};
+	int hang;
+	int lie;
+	hang=sizeof(arr)/sizeof(arr[0]);
+	lie=sizeof(arr[0])/sizeof(arr[0][0]);
+	int max=TwoArr(hang,lie,arr);
+	printf("%d",max);
+	
+	return 0;
+}
+```
+
+#### 9.班上10 个学生，封装一个函数，调用该函数后获得班上的平均分，最高分，最低分
+
+```
+#include<stdio.h>
+
+void iniArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+	scanf("%d",&arr[i]);
+	}
+}
+
+void PriArr(int arr[],int len){
+	for(int i=0;i<len;i++){
+	printf("%d ",arr[i]);
+	}
+	puts("\n");
+	
+}
+
+float pingJun(int arr[],int len,int *max,int *min){
+	int sum=0;
+	*max=arr[0];
+	*min=arr[0];
+	float pj;
+	
+	for(int i=0;i<len;i++){
+	  if(arr[i]>*max){
+		 *max=arr[i];
+	  }
+	  if(arr[i]<*min){
+		 *min=arr[i];
+	  }
+	  
+	  sum=sum+arr[i];
+	}
+	pj=(float)sum/len;
+	return pj;
+}
+ 
+int main(){
+	int arr1[10];
+	int len1=sizeof(arr1)/sizeof(arr1[0]);
+	int max;
+	int min;
+	iniArr(arr1,len1);
+	PriArr(arr1,len1);
+	int pj;
+	pj=pingJun(arr1,len1,&max,&min);
+	printf("平均值:%d 最大值：%d 最小值%d",pj,max,min);
+	
+}
+```
+
+# 第六章 指针 
+
+------
+
+![指针](F:\Linux嵌入式开发\C学习\笔记\指针.jpg)
+
+## 一、指针的基本概念
+
+### 1. 什么是指针
+
+- **指针 = 内存地址**
+- 每个变量在内存中都有一个编号，这个编号就是**地址**，也叫**指针**。
+
+### 2. 变量的两种访问方式
+
+1. **直接访问**：用变量名（如 `a`）
+2. **间接访问**：用地址 / 指针（如 `&a`、`*p`）
+
+### 3. 两个核心运算符（必背）
+
+- & 取地址符：获取变量的内存地址
+
+  ```
+  &a
+  ```
+
+   得到 a 的地址
+
+- \* 解引用符：通过地址取出里面的值
+
+  ```
+  *p
+  ```
+
+   得到 p 指向的变量的值
+
+------
+
+## 二、指针变量
+
+### 1. 什么是指针变量
+
+专门用来**存放地址**的变量，叫指针变量。
+
+### 2. 定义格式
+
+```
+类型名 *指针变量名;
+```
+
+例：
+
+```
+int a = 10;
+int *p;    // 定义指针 p
+p = &a;    // p 存放 a 的地址
+```
+
+### 3. 指针为什么要分类型
+
+- 决定指针指向空间的**大小**
+- 决定指针 **+1 时偏移多少字节 **
+  - `int*` +1 → 偏移 4 字节
+  - `char*` +1 → 偏移 1 字节
+
+### 4. 核心等价关系
+
+```
+int a = 10;
+int *p = &a;
+```
+
+- `p  == &a`  地址相等
+- `*p == a`   值相等
+
+------
+
+## 三、指针的用途（为什么要用指针）
+
+1. **函数内部可以修改外部变量**（值传递做不到）
+2. 高效操作**数组、字符串**
+3. 嵌入式、操作系统底层开发必须用
+4. 动态内存管理
+
+------
+
+## 四、指针作为函数参数
+
+### 1. 值传递
+
+- 只传值，**不能修改实参**
+- 函数内改的是副本
+
+### 2. 地址传递（指针传递）
+
+- 传地址，**可以修改实参**
+- 函数内用 `*指针` 操作原变量
+
+### 3. 经典例子：两数交换（正确写法）
+
+```
+void swap(int *x, int *y)
+{
+    int temp = *x;
+    *x = *y;
+    *y = temp;
+}
+```
+
+调用：
+
+```
+swap(&a, &b);
+```
+
+------
+
+## 五、指针与一维数组
+
+### 1. 数组名的本质
+
+**数组名 = 数组首元素地址**
+
+```
+int arr[5];
+int *p = arr;  // 等价 p = &arr[0]
+```
+
+### 2. 数组元素访问（三种写法等价）
+
+```
+arr[i]
+*(arr + i)
+*(p + i)
+```
+
+### 3. 指针遍历数组
+
+```
+for (int i = 0; i < 5; i++) {
+    printf("%d ", *(p + i));
+}
+```
+
+### 4. 数组名与指针的区别
+
+- 数组名是**常量地址**，不能 `arr++`
+- 指针是变量，可以 `p++`
+
+------
+
+## 六、指针与二维数组（
+
+### 1. 二维数组本质
+
+**数组的数组（父数组 + 子数组）**
+
+### 2. 地址含义
+
+- `a`       父数组地址
+- `a[0]`    第 0 行子数组地址（首元素地址）
+- `&a[0][0]` 第 0 行第 0 列元素地址
+- `a[i][j]` 具体元素值
+
+### 3. 访问元素
+
+```
+a[i][j]  ==  *(*(a+i)+j)
+```
+
+------
+
+## 七、指针相关常见概念
+
+### 1. 数组指针
+
+- 定义：`int (*p)[4];` —— `p` 指向一个包含4个整型元素的一维数组。
+- 常用于操作二维数组的某一行。
+
+```
+int (*p)[4];
+```
+
+### 2. 指针数组
+
+**定义**：存放指针的数组，每个元素都是指针。
+
+```
+int *p[10];       // 包含10个int*元素的数组
+char *strArr[5];  // 字符串指针数组
+```
+
+### 3. 函数指针
+
+- **函数名即函数的入口地址**。
+- 定义：`返回类型 (*指针变量名)(参数列表);`
+
+```
+int (*p)(int, int);   // p可指向返回int、有两个int参数的函数
+p = add;              // add为函数名
+```
+
+### 4. 指针函数
+
+定义：`类型 *函数名(参数列表)`返回值是指针的函数
+
+```
+int *getData(int id) { ... }
+```
+
+- 注意：不能返回局部变量的地址（函数结束局部变量释放）。
+
+### 5. 二级指针
+
+指向指针的指针
+
+```
+int **p;
+```
+
+- 作用：需要在函数内部修改外部指针变量的指向时使用（类似用一级指针修改普通变量）。
+- **注意**：二级指针不能直接指向二维数组（类型不匹配）。
+
+## 八、练习/作业
