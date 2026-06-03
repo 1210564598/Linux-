@@ -2110,9 +2110,23 @@ int main(){
 例：
 
 ```
-int a = 10;
-int *p;    // 定义指针 p
-p = &a;    // p 存放 a 的地址
+#include <stdio.h>
+
+int main() {
+    int a = 10;
+    int *p;          // 定义指针变量
+    p = &a;          // p 保存 a 的地址
+
+    printf("a = %d\n", a);     // 10
+    printf("&a = %p\n", &a);   // 地址（如 0x7ffc...）
+    printf("p = %p\n", p);     // 与 &a 相同
+    printf("*p = %d\n", *p);   // 解引用，输出 10
+
+    // 核心等价
+    // p == &a  成立
+    // *p == a  成立
+    return 0;
+}
 ```
 
 ### 3. 指针为什么要分类型
@@ -2217,9 +2231,9 @@ for (int i = 0; i < 5; i++) {
 ### 2. 地址含义
 
 - `a`       父数组地址
-- `a[0]`    第 0 行子数组地址（首元素地址）
+- `a[0]`=第 0 行子数组地址（首元素地址）
 - `&a[0][0]` 第 0 行第 0 列元素地址
-- `a[i][j]` 具体元素值
+- `a[i][j]`具体元素值
 
 ### 3. 访问元素
 
@@ -2227,7 +2241,24 @@ for (int i = 0; i < 5; i++) {
 a[i][j]  ==  *(*(a+i)+j)
 ```
 
-------
+### 4.指针运算的步长差异
+
+| 表达式     | 类型         | +1 跳过的字节数 | 说明            |
+| :--------- | :----------- | :-------------- | :-------------- |
+| `a`        | `int (*)[3]` | 12 (3×4)        | 跳一整行        |
+| `a + 1`    | `int (*)[3]` | 12              | 指向下一行      |
+| `a[0]`     | `int *`      | 4               | 跳一个 int 元素 |
+| `*(a + 0)` | `int *`      | 4               | 跳一个 int 元素 |
+| `&a[0]`    | `int (*)[3]` | 12              | 跳一整行        |
+
+### 5.等价转换规则
+
+| 原始写法   | 等价写法1     | 等价写法2         | 等价写法3            |
+| :--------- | :------------ | :---------------- | :------------------- |
+| `a[i]`     | `*(a + i)`    | —                 | —                    |
+| `&a[i]`    | `a + i`       | —                 | —                    |
+| `a[i][j]`  | `*(a[i] + j)` | `*(*(a + i) + j)` | `(*(a + i))[j]`      |
+| `&a[i][j]` | `a[i] + j`    | `*(a + i) + j`    | `&(*(*(a + i) + j))` |
 
 ## 七、指针相关常见概念
 
@@ -2237,7 +2268,18 @@ a[i][j]  ==  *(*(a+i)+j)
 - 常用于操作二维数组的某一行。
 
 ```
-int (*p)[4];
+#include <stdio.h>
+
+int main() {
+    int arr[2][3] = {{1, 2, 3}, {4, 5, 6}};
+    int (*p)[3] = arr;   // p 指向 arr 的第 0 行
+
+    printf("arr[0] 的地址 = %p\n", arr[0]);
+    printf("p       指向 = %p\n", p);
+    printf("p+1     指向 = %p\n", p + 1);   // 跳过 12 字节
+
+    return 0;
+}
 ```
 
 ### 2. 指针数组
@@ -2245,8 +2287,24 @@ int (*p)[4];
 **定义**：存放指针的数组，每个元素都是指针。
 
 ```
-int *p[10];       // 包含10个int*元素的数组
-char *strArr[5];  // 字符串指针数组
+#include <stdio.h>
+
+int main() {
+    int a = 10, b = 20, c = 30;
+    int *p[3];           // 定义指针数组
+    
+    p[0] = &a;           // 存放 a 的地址
+    p[1] = &b;           // 存放 b 的地址
+    p[2] = &c;           // 存放 c 的地址
+    
+    printf("p[0] = %p, *p[0] = %d\n", p[0], *p[0]);  // a 的地址, 10
+    printf("p[1] = %p, *p[1] = %d\n", p[1], *p[1]);  // b 的地址, 20
+    printf("p[2] = %p, *p[2] = %d\n", p[2], *p[2]);  // c 的地址, 30
+    
+    printf("sizeof(p) = %zu\n", sizeof(p));   // 24 (64位系统)
+    
+    return 0;
+}
 ```
 
 ### 3. 函数指针
@@ -2255,8 +2313,18 @@ char *strArr[5];  // 字符串指针数组
 - 定义：`返回类型 (*指针变量名)(参数列表);`
 
 ```
-int (*p)(int, int);   // p可指向返回int、有两个int参数的函数
-p = add;              // add为函数名
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    int (*p)(int, int);   // 定义函数指针
+    p = add;              // p 指向 add 函数（函数名就是地址）
+    
+    printf("%d\n", p(3, 5));   // 8，通过指针调用函数
+    printf("%d\n", (*p)(3, 5)); // 8，另一种写法
+    return 0;
+}
 ```
 
 ### 4. 指针函数
@@ -2264,7 +2332,19 @@ p = add;              // add为函数名
 定义：`类型 *函数名(参数列表)`返回值是指针的函数
 
 ```
-int *getData(int id) { ... }
+#include <stdio.h>
+
+// 指针函数：返回 int* 类型
+int *getMax(int *x, int *y) {
+    return (*x > *y) ? x : y;   // 返回地址
+}
+
+int main() {
+    int a = 10, b = 20;
+    int *p = getMax(&a, &b);    // 调用指针函数，得到地址
+    printf("较大值 = %d\n", *p); // 20
+    return 0;
+}
 ```
 
 - 注意：不能返回局部变量的地址（函数结束局部变量释放）。
@@ -2281,3 +2361,367 @@ int **p;
 - **注意**：二级指针不能直接指向二维数组（类型不匹配）。
 
 ## 八、练习/作业
+
+1.初识指针
+
+```
+#include<stdio.h>
+
+int main(){
+	int a=10;
+	int *p=&a;
+	printf("%d\n",a);
+	printf("%p\n",&a);
+	printf("%p\n",p);
+	printf("%d\n,",*p);
+	
+	return 0;
+}
+```
+
+2.封装一个函数，实现两个数的交换
+
+```
+#include<stdio.h>
+
+void swap(int *a,int *b){
+	int tmp;
+	tmp=*a;
+	*a=*b;
+	*b=tmp;
+	
+}
+
+int main(){
+	int a=10;
+	int b=20;
+	swap(&a,&b);
+	printf("交换身体a=%d,b=%d",a,b);
+	
+	return 0;
+}
+```
+
+3.函数封装数组初始化，遍历
+
+```
+#include<stdio.h>
+void IniArr(int *p,int len){
+	for(int i=0;i<len;i++){
+		scanf("%d",(p+i));
+	
+	}
+}
+	
+
+void PriArr(int *p,int len){
+	for(int i =0;i<len;i++){
+		printf("%d ",*(p+i));
+		printf("%d ",p[i]);
+	}
+	
+}
+
+int main(){
+	int arr[5];
+	int len=sizeof(arr)/sizeof(arr[0]);
+	IniArr(arr,len);
+	PriArr(arr,len);
+	return 0;
+}
+```
+
+4.将数组中的n个元素按逆序存放
+
+```
+#include<stdio.h>
+void reArr(int *p,int len){
+	int tmp;
+	int i=0,j=len-1;
+	while(i<j){
+		for(i=0,j=len-1;i<j;i++,j--){
+			tmp=p[i];
+			p[i]=p[j];
+			p[j]=tmp;
+			//tmp=*(p+i);
+			//*(p+i)=*(p+j);
+			//*(p+j)=tmp;
+		}
+	}
+}
+
+void PriArr(int *p,int len){
+	for(int i =0;i<len;i++){
+		printf("%d ",*(p+i));
+	}
+	
+}
+
+int main(){
+	int arr[]={2,23,4,6,6};
+	int len=sizeof(arr)/sizeof(arr[0]);
+	
+	reArr(arr,len);
+	PriArr(arr,len);
+	
+	
+	return 0;
+}
+```
+
+5.数组指针
+
+```
+#include<stdio.h>
+void reArr(int *p,int len){
+	int tmp;
+	int i=0,j=len-1;
+	while(i<j){
+		for(i=0,j=len-1;i<j;i++,j--){
+			tmp=p[i];
+			p[i]=p[j];
+			p[j]=tmp;
+			//tmp=*(p+i);
+			//*(p+i)=*(p+j);
+			//*(p+j)=tmp;
+		}
+	}
+}
+
+void PriArr(int *p,int len){
+	for(int i =0;i<len;i++){
+		printf("%d ",*(p+i));
+	}
+	
+}
+
+int main(){
+	int arr[]={2,23,4,6,6};
+	int len=sizeof(arr)/sizeof(arr[0]);
+	
+	reArr(arr,len);
+	PriArr(arr,len);
+	
+	
+	return 0;
+}
+```
+
+6。指针数组练习题有两个整数a和b由用户输入1.2.3，如输出/则给出a,b中的大数，输入2给出a,b中的小数，输入3给出a，b的和
+
+```
+#include<stdio.h>
+
+int add(int a,int b){
+	return a+b;
+}
+int sub(int a,int b){
+	return a-b;
+}
+int mul(int a,int b){
+	return a*b;
+}
+
+int main(){
+	int a=12;int b=3;
+	int num;
+	int (*p)(int,int);
+	printf("请输入1，2，3中的一种将数字进行+-x的不同运算");
+	scanf("%d",&num);
+	switch(num){
+		case 1:
+			p=add;
+		break;
+		case 2:
+			p=sub;
+		break;
+		case 3:
+			p=mul;
+		break;
+		default:
+		printf("输入异常");
+		break;
+	}
+	printf("%d",p(a,b));
+	
+	
+	return 0;
+}
+```
+
+7.指针数组
+
+```
+#include<stdio.h>
+
+int add(int a,int b){
+	return a+b;
+}
+int sub(int a,int b){
+	return a-b;
+}
+int mul(int a,int b){
+	return a*b;
+}
+
+int main(){
+	int a=10;
+	int b=20;
+	int (*p[3])(int,int)={add,sub,mul};
+	for(int i=0;i<3;i++){
+		printf("%d ",(*p[i])(a,b));
+	}
+	
+	
+	return 0;
+}
+```
+
+8.指针函数练习1：由a个学生，每个学生由b门课程，输入序号给出这个学生所有的成绩
+
+```
+#include<stdio.h>
+
+
+int *zhanshi(int (*p)[4],int weizhi){
+	int *date;
+	date=(int *)(p+weizhi);
+	return date;
+}
+
+int main(){
+	int a[][4]={{93,53,63,59},
+	{100,90,67,77},
+	{66,77,55,22}};
+	int *px;
+	int weizhi;
+	scanf("%d",&weizhi);
+	px=zhanshi(a,weizhi);
+	for(int i=0;i<4;i++){
+		printf("%d ",*(p+i));
+	}
+	
+	return 0;
+}
+```
+
+9.找出所有学生中成绩不合格的学生以及学生号
+
+```
+#include<stdio.h>
+
+
+int findD60(int (*p)[4],int hang,int lie){
+	for(int i=0;i<hang;i++){
+		for(int j=0;j<lie;j++){
+			if(p[i][j]<60){
+			printf("学号为%d的学生,第%d门课程不合格,成绩为%d\n",i,j,*(*(p+i)+j));
+			}
+	}
+	
+}
+/*for(int i=0;i<hang;i++){
+		for(int j=0;j<lie;j++){
+			if(p[i][j]<60){
+			printf("学号为%d的学生,第%d门课程不合格,成绩为%d\n",i,j,p[i][j]);
+			}
+	}
+	
+}
+*/
+
+
+}
+int main(){
+	int a[][4]={{93,53,63,59},
+	{100,90,67,77},
+	{66,77,55,22}};
+	int hang=sizeof(a)/sizeof(a[0]);
+	int lie=sizeof(a[0])/sizeof(a[0][0]);
+	
+	findD60(a,hang,lie);
+
+	
+	return 0;
+}
+```
+
+10.二级指针用法
+
+```
+int value = 100;
+int *ptr = &value;    // 一级指针：存储value的地址
+int **pptr = &ptr;    // 二级指针：存储ptr的地址
+
+// 关系说明
+// pptr → ptr → value
+// *pptr = ptr (value的地址)
+// **pptr = value (100)
+```
+
+11.总结各种指针的定义
+
+```
+一个整形数：int a;
+
+一个指向整形数的指针：int *a;
+
+一个指向指针的指针，它指向的指针指向一个整形数：int **a;
+
+一个有10个整形数的数组：int a[10];
+
+一个有10个指针的数组，每个指针指向一个整形数：int *a[10];
+
+一个有10个整形数的数组的指针：int (*a)[10];
+
+一个指向指针的指针，被指向的指针指向一个有10个整形数的数组：int (**a)[10];
+
+一个指向数组的指针，该数组有10个整形数：int (a)[10];
+
+一个指向函数的指针，该函数有一个整形数并返回一个整形数：int (*a)(int);
+
+一个有10个指针的数组，每个指针指向一个函数，该函数有一个整形数并返回一个整形数：int (*a[10])(int);
+
+一个函数的指针，指向的函数的类型是有两个整形数并且返回一个函数指针的函数，返回的函数指针指向一个有整形数且返回整形数的函数：int ((a)(int,int))(int);
+
+
+
+```
+
+作业：
+
+ 1.输入三个数a,b,c; 要求不管怎么输入，在输出的时候，a,b,c就是由大到小的顺序输出，用函数封装实现
+
+```
+#include<stdio.h>
+
+void paixu(int *a,int *b,int *c){
+	int tmp;
+	if(*a<*b){
+		tmp=*b;
+		*b=*a;
+		*a=tmp;
+		
+	}
+	if(*a<*c){
+		tmp=*c;
+		*c=*a;
+		*a=tmp;
+		
+	}
+	if(*b<*c){
+		tmp=*c;
+		*c=*b;
+		*b=tmp;
+	}
+}
+
+int main(){
+	int a,b,c;
+	scanf("%d%d%d",&a,&b,&c);
+	paixu(&a,&b,&c);
+	printf("a=%d b=%d c=%d\n",a,b,c);
+	return 0;
+}
+```
+
