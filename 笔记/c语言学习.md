@@ -2222,7 +2222,7 @@ for (int i = 0; i < 5; i++) {
 
 ------
 
-## 六、指针与二维数组（
+## 六、指针与二维数组
 
 ### 1. 二维数组本质
 
@@ -2262,9 +2262,10 @@ a[i][j]  ==  *(*(a+i)+j)
 
 ## 七、指针相关常见概念
 
-### 1. 数组指针
+### 1. 数组指针 
 
-- 定义：`int (*p)[4];` —— `p` 指向一个包含4个整型元素的一维数组。
+定义：`int (*p)[4];` —— `p` 指向一个包含4个整型元素的一维数组。
+
 - 常用于操作二维数组的某一行。
 
 ```
@@ -2598,7 +2599,7 @@ int main(){
 	scanf("%d",&weizhi);
 	px=zhanshi(a,weizhi);
 	for(int i=0;i<4;i++){
-		printf("%d ",*(p+i));
+		printf("%d ",*(px+i));
 	}
 	
 	return 0;
@@ -2721,6 +2722,555 @@ int main(){
 	scanf("%d%d%d",&a,&b,&c);
 	paixu(&a,&b,&c);
 	printf("a=%d b=%d c=%d\n",a,b,c);
+	return 0;
+}
+```
+
+# 第七章：字符串 
+
+------
+
+![字符串](F:\Linux嵌入式开发\C学习\笔记\字符串.png)
+
+### 一、字符串的本质
+
+**字符串就是字符数组**，以 `'\0'`（空字符）作为结束标志。
+
+```
+// 字符数组（字符串）
+char str1[] = "hello";
+char str2[] = {'h', 'e', 'l', 'l', 'o', '\0'};  // 等价于上面
+
+// 整型数组（对比）
+int arr[] = {1, 2, 3, 4, 5};  // 没有结束标志
+```
+
+------
+
+### 二、字符串的定义与初始化
+
+#### 2.1 多种定义方式
+
+| 方式                 | 代码                                       | 存储位置 | 是否可修改 |
+| :------------------- | :----------------------------------------- | :------- | :--------- |
+| 字符数组（变量）     | `char str[] = "hello";`                    | 栈       | ✅ 可修改   |
+| 字符数组（指定大小） | `char str[10] = "hello";`                  | 栈       | ✅ 可修改   |
+| 字符数组（逐个赋值） | `char str[] = {'h','e','l','l','o','\0'};` | 栈       | ✅ 可修改   |
+| 字符指针（常量）     | `char *p = "hello";`                       | 常量区   | ❌ 不可修改 |
+| 动态分配             | `char *p = (char*)malloc(10);`             | 堆       | ✅ 可修改   |
+
+```
+#include <stdio.h>
+
+int main() {
+    // 1. 字符串变量（可修改）
+    char str1[] = "hello";
+    str1[0] = 'H';
+    printf("%s\n", str1);   // "Hello"
+    
+    // 2. 字符串常量（不可修改，危险！）
+    char *str2 = "world";
+    // str2[0] = 'W';   // ❌ 严重错误！段错误
+    
+    // 3. 指定大小初始化
+    char str3[10] = "hello";
+    printf("%s\n", str3);   // "hello"
+    
+    return 0;
+}
+```
+
+#### 2.2 字符数组 vs 字符指针
+
+| 特性       | `char str[] = "hello"` | `char *p = "hello"` |
+| :--------- | :--------------------- | :------------------ |
+| 存储位置   | 栈（可读写）           | 常量区（只读）      |
+| 是否可修改 | ✅ 可以                 | ❌ 不可以            |
+| `sizeof`   | 整个数组大小（6）      | 指针大小（8）       |
+| 能否自增   | `str++` ❌              | `p++` ✅             |
+
+------
+
+### 三、字符串的存储与结束标志
+
+#### 3.1 `'\0'` 结束标志
+
+```
+char str[] = "hello";
+// 实际存储：'h' 'e' 'l' 'l' 'o' '\0'
+// 内存大小：6字节（5个字符 + 1个'\0'）
+```
+
+#### 3.2 `sizeof` vs `strlen`
+
+| 函数     | 作用           | 是否包含 `'\0'` | 示例                  |
+| :------- | :------------- | :-------------- | :-------------------- |
+| `sizeof` | 计算内存字节数 | ✅ 包含          | `sizeof("hello")` = 6 |
+| `strlen` | 计算字符串长度 | ❌ 不包含        | `strlen("hello")` = 5 |
+
+```
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str[] = "hello";
+    
+    printf("sizeof(str) = %zu\n", sizeof(str));   // 6（包含'\0'）
+    printf("strlen(str) = %zu\n", strlen(str));   // 5（不包含'\0'）
+    
+    char str2[10] = "hello";
+    printf("sizeof(str2) = %zu\n", sizeof(str2)); // 10（整个数组大小）
+    printf("strlen(str2) = %zu\n", strlen(str2)); // 5（字符串长度）
+    
+   return 0;
+}
+```
+
+------
+
+### 四、动态开辟字符串
+
+#### 4.1 常用内存函数
+
+| 函数      | 作用         | 原型                                      |
+| :-------- | :----------- | :---------------------------------------- |
+| `malloc`  | 分配内存     | `void *malloc(size_t size)`               |
+| `calloc`  | 分配并清零   | `void *calloc(size_t nmemb, size_t size)` |
+| `realloc` | 重新分配内存 | `void *realloc(void *ptr, size_t size)`   |
+| `free`    | 释放内存     | `void free(void *ptr)`                    |
+| `memset`  | 设置内存值   | `void *memset(void *s, int c, size_t n)`  |
+
+#### 4.2 动态字符串示例
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+    // 1. 动态分配字符串
+    char *str = (char*)malloc(20 * sizeof(char));
+    if (str == NULL) {
+        printf("分配失败\n");
+        return 1;
+    }
+    
+    // 2. 复制字符串
+    strcpy(str, "hello");
+    printf("%s\n", str);   // "hello"
+    
+    // 3. 重新分配更大空间
+    str = (char*)realloc(str, 50 * sizeof(char));
+    strcat(str, " world");
+    printf("%s\n", str);   // "hello world"
+    
+    // 4. 释放内存
+    free(str);
+    str = NULL;   // 防止悬指针
+    
+    return 0;
+}
+```
+
+#### 4.3 常见错误：悬挂指针
+
+```
+int *p = (int*)malloc(sizeof(int));
+free(p);
+// p 变成悬挂指针（野指针）
+// *p = 10;   // ❌ 错误！内存已释放
+
+// 正确做法：释放后置为 NULL
+free(p);
+p = NULL;
+```
+
+------
+
+### 五、字符串常用 API
+
+#### 5.1 输入输出函数
+
+| 函数                      | 作用                     | 安全性     |
+| :------------------------ | :----------------------- | :--------- |
+| `printf("%s", str)`       | 输出字符串               | ✅ 安全     |
+| `puts(str)`               | 输出字符串并换行         | ✅ 安全     |
+| `scanf("%s", str)`        | 读取字符串（遇空格停止） | ⚠️ 可能溢出 |
+| `gets(str)`               | 读取一行（已废弃）       | ❌ 不安全   |
+| `fgets(str, size, stdin)` | 安全读取一行             | ✅ 安全     |
+
+```
+#include <stdio.h>
+
+int main() {
+    char str[100];
+    
+    // 不安全（已废弃）
+    // gets(str);
+    
+    // 安全方式
+    printf("请输入字符串: ");
+    fgets(str, sizeof(str), stdin);
+    
+    // 去掉末尾的换行符
+    str[strcspn(str, "\n")] = '\0';
+    
+    printf("你输入了: %s\n", str);
+    
+    return 0;
+}
+```
+
+#### 5.2 字符串操作函数
+
+| 函数                               | 作用          | 示例                              |
+| :--------------------------------- | :------------ | :-------------------------------- |
+| `strlen(str)`                      | 获取长度      | `int len = strlen("hello");` // 5 |
+| `strcpy(dest, src)`不自动添加 `\0` | 复制字符串    | `strcpy(dest, "hello");`          |
+| `strncpy(dest, src, n)`            | 复制前n个字符 | `strncpy(dest, src, 5);`          |
+| `strcat(dest, src)`                | 拼接字符串    | `strcat(dest, " world");`         |
+| `strcmp(str1, str2)`               | 比较字符串    | `if (strcmp(s1, s2) == 0)`        |
+| `strncmp(s1, s2, n)`               | 比较前n个字符 | `strncmp(s1, s2, 3)`              |
+| `strchr(str, ch)`                  | 查找字符      | `char *p = strchr(str, 'a');`     |
+| `strstr(str, substr)`              | 查找子串      | `char *p = strstr(str, "abc");`   |
+| `strtok(str, delim)`               | 分割字符串    | `char *p = strtok(str, ",");`     |
+
+#### 5.3 完整示例
+
+```
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str1[50] = "hello";
+    char str2[50] = "world";
+    char str3[50];
+    
+    // 1. 获取长度
+    printf("str1长度: %zu\n", strlen(str1));   // 5
+    
+    // 2. 复制字符串
+    strcpy(str3, str1);
+    printf("str3: %s\n", str3);   // "hello"
+    
+    // 3. 拼接字符串
+    strcat(str1, " ");
+    strcat(str1, str2);
+    printf("拼接后: %s\n", str1);  // "hello world"
+    
+    // 4. 比较字符串
+    if (strcmp(str1, "hello world") == 0) {
+        printf("字符串相等\n");
+    }
+    
+    // 5. 查找字符
+    char *p = strchr(str1, 'w');
+    if (p != NULL) {
+        printf("找到 'w'，位置: %ld\n", p - str1);  // 6
+    }
+    
+    // 6. 查找子串
+    char *sub = strstr(str1, "world");
+    if (sub != NULL) {
+        printf("找到子串: %s\n", sub);  // "world"
+    }
+    
+    // 7. 字符串分割
+    char data[] = "apple,banana,orange";
+    char *token = strtok(data, ",");
+    while (token != NULL) {
+        printf("分割: %s\n", token);
+        token = strtok(NULL, ",");
+    }
+    
+    return 0;
+}
+```
+
+**输出**：
+
+```
+str1长度: 5
+str3: hello
+拼接后: hello world
+字符串相等
+找到 'w'，位置: 6
+找到子串: world
+分割: apple
+分割: banana
+分割: orange
+```
+
+------
+
+### 六、字符串常见操作实现
+
+#### 6.1 自己实现 `strlen`
+
+```
+int myStrlen(char *a){
+	int len=0;
+	while(*(a+len)!='\0'){
+		len++;
+	}
+	return len;
+}
+
+
+    // 或
+    // const char *p = str;
+    // while (*p++) len++;
+    // return len;
+
+```
+
+#### 6.2 自己实现 `strcpy`
+
+```
+char *Mycopy(char *a,char *b){
+		char *poi=a;
+		while((*a=*b)!='\0'){
+			a++;
+			b++;
+		}
+		return poi;
+}
+```
+
+#### 6.3 自己实现 `strcmp`
+
+```
+int Mycmp(char *a,char *b){
+		while((*a==*b)&&*a&&*b){
+			a++;
+			b++;
+		}
+		return *a-*b;
+}
+```
+
+#### 6.4 自己实现 `strcat`
+
+```
+char *my_strcat(char *dest, const char *src) {
+    char *p = dest;
+    
+    // 找到 dest 的末尾
+    while (*dest != '\0') {
+        dest++;
+    }
+    
+    // 复制 src
+    while ((*dest++ = *src++) != '\0');
+    
+    return p;
+}
+```
+
+------
+
+### 七、常见错误与注意事项
+
+#### 7.1 错误清单
+
+| 错误             | 说明                             | 正确做法                           |
+| :--------------- | :------------------------------- | :--------------------------------- |
+| 忘记 `'\0'`      | 字符数组没有结束标志             | 字符串必须留一个位置给 `'\0'`      |
+| 修改字符串常量   | `char *p = "hello"; p[0]='H';`   | 用字符数组 `char str[] = "hello";` |
+| 缓冲区溢出       | `strcpy(dest, src)` 时 dest 太小 | 用 `strncpy` 或确保空间足够        |
+| 返回局部数组地址 | `return arr;`（arr是局部数组）   | 用 `static` 或动态分配             |
+| 忘记 `free`      | 动态分配的内存没释放             | 配对使用 `malloc/free`             |
+| 悬挂指针         | free 后继续使用                  | free 后置为 `NULL`                 |
+
+#### 7.2 安全函数建议
+
+```
+// 不安全
+char str[5];
+strcpy(str, "hello");   // 溢出！
+
+// 安全
+char str[10];
+strncpy(str, "hello", sizeof(str) - 1);
+str[sizeof(str) - 1] = '\0';
+
+// 或使用 fgets 代替 gets
+fgets(str, sizeof(str), stdin);
+```
+
+------
+
+### 八、字符串与指针总结表
+
+| 知识点     | 核心内容                                         |
+| :--------- | :----------------------------------------------- |
+| 本质       | 以 `'\0'` 结尾的字符数组                         |
+| 字符串变量 | `char str[] = "hello"`（可修改）                 |
+| 字符串常量 | `char *p = "hello"`（只读，不可修改）            |
+| 长度计算   | `strlen`（不含`'\0'`）vs `sizeof`（含`'\0'`）    |
+| 动态分配   | `malloc` + `free`，防内存泄漏                    |
+| 常用函数   | `strcpy`、`strcat`、`strcmp`、`strstr`、`strtok` |
+| 安全输入   | 用 `fgets` 替代 `gets`                           |
+| 输出       | `printf("%s")` 或 `puts`                         |
+
+## 九、练习/作业
+
+MYAPI
+
+```
+#include<stdio.h>
+
+
+int myStrlen(char *a){
+	int len=0;
+	while(*(a+len)!='\0'){
+		len++;
+	}
+	return len;
+}
+
+char *Mycopy(char *a,char *b){
+		char *poi=a;
+		while((*a=*b)!='\0'){
+			a++;
+			b++;
+		}
+		return poi;
+}
+
+int Mycmp(char *a,char *b){
+		while((*a==*b)&&*a&&*b){
+			a++;
+			b++;
+		}
+		return *a-*b;
+}
+
+char *Mycat(char *a,char *b){
+		char *poi=a;
+		while((*a++)!='\0'){} // 找到末尾
+		a--; // 回退到 '\0' 位置 ← 加上这一行
+		
+		while((*a++=*b++)!='\0'){}
+		
+		return poi;
+}
+
+
+int main(){
+	char a[10]="hello";
+	char b[]="hi";
+	printf("%d\n",myStrlen(b));
+	// Mycopy(a,b);
+	// puts(a);
+	printf("%d\n",Mycmp(a,b));
+	Mycat(a,b);
+	puts(a);
+	return 0;
+}
+```
+
+字符串基础用法
+
+```
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+	
+
+int main(){
+	char str1[]="hello";
+	char str2[10]="hello";
+	char str3[]={'h','e','l','l','o','\0'};
+	char *p1="hello";
+	char *p2=(char *)malloc(5);//分配完后要初始化
+	strcpy(p2,"hello");
+	
+	printf("size=%d\n",sizeof(str1));//6
+	printf("size=%d\n",strlen(str1));//5
+	printf("size2=%d\n",sizeof(str2));//10
+	printf("size2=%d\n",strlen(str2));//5	
+	printf("size3=%d\n",sizeof(str3));//6
+	printf("size3=%d\n",strlen(str3));//5
+	printf("sizep1=%d\n",sizeof(p1));//8
+	printf("sizep1=%d\n",strlen(p1));//5
+	printf("sizep2=%d\n",sizeof(p2));//8
+	printf("sizep2=%d\n",strlen(p2));//5
+	
+	
+	free(p2);
+	p2=NULL;
+	return 0;
+}
+```
+
+常见api使用
+
+```
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+
+int main(){
+	//输入输出函数
+	/*char str[100];
+	printf("hello\n");
+	fgets(str,sizeof(str),stdin);
+	puts(str);
+	
+	scanf("%s",str);
+	puts(str);*/
+	//字符串操作函数
+	char str1[50]="hello";
+	char str2[60]="hi";
+	char str3[100]="you name";
+	char str4[10]="nishishui";
+	char str5[10]="nishis";
+	strlen(str1);//获取字符串你长度 =5
+	strcpy(str1,"nihao");
+	puts(str1);
+	strcpy(str1,str2);//复制
+	puts(str1);
+	strncpy(str1,str3,3);//复制n个字符
+	str1[3]='\0';
+	puts(str1);
+	
+	strcat(str1,str2);
+	puts(str1);
+	strcat(str1,"hello"); //追加字符
+	puts(str1);
+	
+	
+	if(strcmp(str4,str5)==0){//比较全部
+		printf("你输入的内容相同\n");
+	}else if(strcmp(str4,str5)>0){
+		printf("第一个字符串的数值大\n");
+	}else if(strcmp(str4,str5)<0){
+		printf("第二个字符串的数值大\n");
+	}
+	
+	printf("%d",strncmp(str4,str5,3));//比较前三字符
+	
+	char *p = strchr(str1, 'h');  // 查找字符 'h'
+	if (p != NULL) {
+		printf("找到字符 'h'，位置: %d\n", p - str1);  // 输出索引位置
+	} else {
+    printf("未找到字符 'h'\n");
+	}
+	
+	char *p1=strstr(str1,"hell");
+	if(p1!=NULL){
+		printf("找到字串：%s,位置是%d\n",p1,p1 - str1);
+	}
+	
+	char data[]="apple,baaba,orange";
+	    char *token = strtok(data, ",");
+    while (token != NULL) {
+        printf("分割: %s\n", token);
+        token = strtok(NULL, ",");
+    }
+
+	
 	return 0;
 }
 ```
