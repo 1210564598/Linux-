@@ -3275,3 +3275,2077 @@ int main(){
 }
 ```
 
+# 第八章 结构体、共用体、枚举、typedef 
+
+------
+
+![结构体](F:\Linux嵌入式开发\C学习\笔记\结构体.png)
+
+### 一、为什么需要结构体
+
+**问题**：数组只能存储相同类型的数据，无法表示一个学生的完整信息（姓名、学号、成绩等不同类型的数据）。
+
+**解决方案**：结构体可以将不同类型的变量组合成一个整体。
+
+| 数据类型 | 特点     | 示例                                                      |
+| :------- | :------- | :-------------------------------------------------------- |
+| 数组     | 相同类型 | `int scores[5]`                                           |
+| 结构体   | 不同类型 | `struct Student { char name[20]; int id; float score; };` |
+
+------
+
+### 二、结构体（struct）
+
+#### 2.1 定义结构体模板
+
+```
+// 方式1：标准定义
+struct Student {
+    int id;
+    char name[50];
+    float score;
+};
+
+// 方式2：定义模板的同时定义变量
+struct Student {
+    int id;
+    char name[50];
+    float score;
+} stu1, stu2;
+
+// 方式3：匿名结构体（不推荐，只能用一次）
+struct {
+    int id;
+    char name[50];
+} stu1;
+```
+
+#### 2.2 定义结构体变量
+
+```
+struct Student stu1;                        // 普通变量
+struct Student stu2 = {1001, "张三", 85.5}; // 初始化
+struct Student *p = &stu1;                  // 结构体指针
+struct Student arr[30];                     // 结构体数组
+```
+
+#### 2.3 结构体初始化的多种方式
+
+```
+// 方式1：按顺序初始化
+struct Student s1 = {1001, "张三", 85};
+
+// 方式2：指定成员初始化（C99，更安全）
+struct Student s2 = {.id = 1002, .name = "李四", .score = 92};
+
+// 方式3：部分初始化（未初始化的成员为0）
+struct Student s3 = {1003};  // id=1003, name="", score=0
+
+// 方式4：先定义后逐个赋值
+struct Student s4;
+s4.id = 1004;
+strcpy(s4.name, "王五");  // ⚠️ 不能直接 s4.name = "王五"
+s4.score = 78;
+```
+
+**易错点**：字符串成员不能直接赋值，要用 `strcpy`。
+
+#### 2.4 访问结构体成员
+
+| 方式     | 运算符 | 示例                                     |
+| :------- | :----- | :--------------------------------------- |
+| 普通变量 | `.`    | `stu1.id = 1001;`                        |
+| 指针变量 | `->`   | `p->id = 1001;` 等价于 `(*p).id = 1001;` |
+
+```
+struct Student stu;
+struct Student *p = &stu;
+
+stu.id = 1001;      // 用 .
+p->id = 1001;       // 用 ->
+(*p).id = 1001;     // 等价于上面
+```
+
+#### 2.5 结构体数组
+
+```
+// 批量初始化
+struct Student class[] = {
+    {1001, "张三", 85},
+    {1002, "李四", 92},
+    {1003, "王五", 78}
+};
+
+// 计算元素个数（常用技巧）
+int n = sizeof(class) / sizeof(class[0]);
+
+// 遍历
+for (int i = 0; i < n; i++) {
+    printf("%d %s %.2f\n", class[i].id, class[i].name, class[i].score);
+}
+```
+
+------
+
+### 三、结构体指针
+
+#### 3.1 基本用法
+
+```
+struct Student stu = {1001, "张三", 85};
+struct Student *p = &stu;
+
+printf("%d\n", p->id);      // 1001
+printf("%s\n", p->name);    // 张三
+printf("%.2f\n", p->score); // 85
+```
+
+#### 3.2 结构体指针作为函数参数
+
+```
+// 方式1：传值（拷贝整个结构体，效率低）
+void printStudent(struct Student s) {
+    printf("%d %s %.2f\n", s.id, s.name, s.score);
+}
+
+// 方式2：传指针（推荐，效率高，可修改原数据）
+void updateScore(struct Student *p, float newScore) {
+    p->score = newScore;
+}
+
+int main() {
+    struct Student stu = {1001, "张三", 85};
+    updateScore(&stu, 95);
+    printStudent(stu);
+    return 0;
+}
+```
+
+| 传参方式 | 效率                 | 能否修改原数据 |
+| :------- | :------------------- | :------------- |
+| 传值     | 低（拷贝整个结构体） | ❌              |
+| 传指针   | 高（只传4/8字节）    | ✅              |
+
+#### 3.3 结构体指针数组
+
+```
+struct Student *pArr[3];
+pArr[0] = &stu1;
+pArr[1] = &stu2;
+pArr[2] = &stu3;
+
+for (int i = 0; i < 3; i++) {
+    printf("%s\n", pArr[i]->name);
+}
+```
+
+#### 3.4 结构体与函数：返回结构体的正确方式
+
+```
+// ❌ 错误：返回局部变量的地址
+struct Student* getStudent() {
+    struct Student s = {1001, "张三", 85};
+    return &s;  // 危险！函数结束s被销毁
+}
+
+// ✅ 正确方式1：返回结构体本身（拷贝）
+struct Student getStudent() {
+    struct Student s = {1001, "张三", 85};
+    return s;  // 拷贝一份返回
+}
+
+// ✅ 正确方式2：使用静态局部变量
+struct Student* getStudent() {
+    static struct Student s = {1001, "张三", 85};
+    return &s;  // 静态变量生命周期是整个程序
+}
+
+// ✅ 正确方式3：动态分配
+struct Student* getStudent() {
+    struct Student *s = (struct Student*)malloc(sizeof(struct Student));
+    s->id = 1001;
+    strcpy(s->name, "张三");
+    s->score = 85;
+    return s;  // 调用者负责 free
+}
+```
+
+------
+
+### 四、共用体/联合体（union）
+
+#### 4.1 定义与特点
+
+```
+union Data {
+    int i;
+    float f;
+    char str[20];
+};
+```
+
+**特点**：
+
+- 所有成员**共享同一块内存空间**
+- 大小由**最大的成员**决定
+- **同一时间只能使用一个成员**，赋值会覆盖其他成员
+
+| 对比 | 结构体 struct              | 共用体 union           |
+| :--- | :------------------------- | :--------------------- |
+| 内存 | 各成员独立分配             | 所有成员共享一块内存   |
+| 大小 | 各成员大小之和（考虑对齐） | 最大成员的大小         |
+| 赋值 | 互不影响                   | 会互相覆盖             |
+| 用途 | 同时存储多个不同类型数据   | 同一时间只使用一种类型 |
+
+#### 4.2 示例
+
+```
+union Data data;
+data.i = 10;
+printf("%d\n", data.i);   // 10
+
+data.f = 3.14;
+printf("%f\n", data.f);   // 3.14
+printf("%d\n", data.i);   // 垃圾值（被覆盖了）
+```
+
+#### 4.3 共用体的实际应用场景
+
+```
+// 场景1：数据解析（网络协议、嵌入式）
+union IPAddress {
+    unsigned int addr;      // 4字节整数
+    unsigned char bytes[4]; // 4个字节
+};
+
+union IPAddress ip;
+ip.addr = 0xC0A80101;  // 192.168.1.1
+printf("%d.%d.%d.%d\n", ip.bytes[0], ip.bytes[1], ip.bytes[2], ip.bytes[3]);
+
+// 场景2：节省内存（同一时间只用一种类型）
+typedef union {
+    int i;
+    float f;
+    char str[20];
+} Data;
+
+Data d;
+d.i = 10;      // 此时用 int
+// d.f = 3.14;  // 此时用 float，会覆盖 int
+```
+
+------
+
+### 五、枚举类型（enum）
+
+#### 5.1 定义与使用
+
+```
+enum Weekday {
+    MON, TUE, WED, THU, FRI, SAT, SUN
+};
+
+enum Weekday today = MON;
+```
+
+**特点**：
+
+- 枚举常量默认从 **0** 开始递增
+- 可手动指定值
+
+```
+enum Color {
+    RED = 1,
+    GREEN = 3,
+    BLUE = 5
+};
+// RED=1, GREEN=3, BLUE=5
+```
+
+#### 5.2 枚举的高级用法
+
+```
+// 1. 手动指定值（常用于状态码）
+enum Status {
+    SUCCESS = 0,
+    ERROR_FILE = -1,
+    ERROR_MEMORY = -2,
+    ERROR_NETWORK = -3
+};
+
+// 2. 枚举作为函数返回值
+enum Status readFile() {
+    // ... 处理逻辑
+    return SUCCESS;
+}
+
+// 3. 枚举作为数组索引
+enum Month { JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC };
+int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+printf("1月有%d天\n", days[JAN]);  // 31
+```
+
+#### 5.3 枚举与宏定义的对比
+
+| 特性         | 枚举 enum    | 宏 #define   |
+| :----------- | :----------- | :----------- |
+| 作用域       | 遵循块作用域 | 全局替换     |
+| 调试         | 可见符号名   | 预处理后消失 |
+| 类型安全     | 有类型检查   | 无类型检查   |
+| 自动递增     | ✅ 支持       | ❌ 不支持     |
+| 相关常量分组 | ✅ 好         | ⚠️ 需手动     |
+
+------
+
+### 六、typedef 关键字
+
+#### 6.1 为类型起别名
+
+```
+// 基本类型
+typedef int Integer;
+Integer a = 10;  // 等价于 int a = 10;
+
+// 结构体（最常用）
+typedef struct Student {
+    int id;
+    char name[50];
+} Stu;  // Stu 是 struct Student 的别名
+
+Stu s1;  // 等价于 struct Student s1;
+
+// 匿名结构体 + typedef
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+Point p1 = {10, 20};
+```
+
+#### 6.2 简化指针类型
+
+```
+typedef int *IntPtr;
+IntPtr p1, p2;  // 等价于 int *p1, *p2;
+
+// 结构体指针
+typedef struct Student *StuPtr;
+StuPtr p = &stu;
+```
+
+#### 6.3 简化函数指针
+
+```
+// 定义函数指针类型
+typedef int (*FuncPtr)(int, int);
+
+// 使用
+FuncPtr p = add;  // 等价于 int (*p)(int,int) = add;
+```
+
+#### 6.4 typedef 的常见陷阱
+
+```
+// 陷阱1：与指针结合
+typedef int *Ptr;
+Ptr a, b;   // a和b都是 int*
+
+#define Ptr2 int *
+Ptr2 c, d;  // 相当于 int *c, d;  d是int，不是指针！
+
+// 陷阱2：与 const 结合
+typedef int *Ptr;
+const Ptr p;  // p是常量指针（指向int的常量指针），不是指向const int
+```
+
+#### 6.5 typedef vs #define
+
+| 特性         | typedef      | #define    |
+| :----------- | :----------- | :--------- |
+| 处理阶段     | 编译期       | 预处理期   |
+| 作用域       | 遵循块作用域 | 全局替换   |
+| 复杂类型     | ✅ 适合       | ⚠️ 容易出错 |
+| 类型安全检查 | ✅ 有         | ❌ 无       |
+
+------
+
+### 七、结构体嵌套
+
+#### 7.1 结构体包含结构体
+
+```
+struct Date {
+    int year;
+    int month;
+    int day;
+};
+
+struct Student {
+    int id;
+    char name[50];
+    struct Date birthday;  // 嵌套结构体
+};
+
+// 访问
+struct Student stu;
+stu.birthday.year = 2000;
+stu.birthday.month = 1;
+stu.birthday.day = 1;
+```
+
+#### 7.2 结构体自引用（链表节点）
+
+```
+struct Node {
+    int data;
+    struct Node *next;  // 指向自身类型的指针
+};
+
+struct Node *head = NULL;
+```
+
+------
+
+### 八、内存对齐（了解）
+
+```
+struct A {
+    char c;   // 1字节
+    int i;    // 4字节
+};
+// sizeof(struct A) = 8（不是5）
+// 原因：内存对齐，char后面有3个填充字节
+```
+
+| 规则                             | 说明              |
+| :------------------------------- | :---------------- |
+| 成员按最大类型对齐               | 节省 CPU 访问时间 |
+| 结构体大小是最大成员大小的整数倍 | 方便数组访问      |
+
+### 九、经典例题
+
+#### 例题1：学生成绩管理系统（基础）
+
+**题目**：
+
+```
+#include<stdio.h>
+#include<string.h>
+//例题1：学生成绩管理系统
+//定义学生结构体（学号、姓名、3门课成绩），输入3个学生信息，计算每个学生的平均分并输出。
+
+struct Student{
+	int id;
+	float scores[3];
+	char name[40];
+	float avg;
+};
+
+void intStruct(struct Student *s){
+	printf("请输入名字\n");
+	char name[40];
+	scanf("%s",name);
+	strcpy(s->name,name);
+	
+	printf("请输入学号\n");
+	scanf("%d",&s->id);
+	
+	printf("请输入成绩\n");
+	for(int i=0;i<3;i++){
+		scanf("%f",&s->scores[i]);
+	}
+	float sum=0;
+	for(int i=0;i<3;i++){
+		sum=(sum+s->scores[i]);
+	}
+	s->avg=sum/3;
+}
+void avgARR(struct Student *s,int len){
+	
+	for(int j=0;j<len;j++){
+	float sum=0;
+	for(int i=0;i<3;i++){
+		sum=(sum+s[j].scores[i]);
+	}
+	s[j].avg=sum/3;
+	}
+}
+
+
+void PrinStruct(struct Student s){
+	printf("id:%d 姓名:%s  ",s.id,s.name);
+
+	for(int i=0;i<3;i++){
+		
+		printf("第%d门课程的成绩为%.2f  ",i+1,s.scores[i]);
+	}
+	printf("平局分为:%.1f\n",s.avg);
+	
+}
+
+void avgSort(struct Student *Arr,int len){
+	struct Student tmp;
+	
+	for(int i=0;i<len-1;i++){
+		for(int j=0;j<len-i-1;j++){
+			if((Arr[j].avg)<(Arr[j+1].avg)){
+				tmp=Arr[j+1];
+				Arr[j+1]=Arr[j];
+				Arr[j]=tmp;
+			}
+		}
+	}
+	
+}
+
+struct Student* FindavgMax(struct Student *s,int len){
+	struct Student *max=s;
+	for(int i=1;i<len;i++){
+			if((s+i)->avg>max->avg){
+				max=s+i;
+			}
+	}
+	return max;
+}
+
+
+
+int main(){
+    struct Student students[3] = {
+        {1001, {85, 90, 88}, "张三", 0},
+        {1002, {99, 92, 86}, "李四", 0},
+        {1003, {80, 75, 79}, "王五", 0}
+    };
+    int len=sizeof(students)/sizeof(students[0]);
+	avgSort(students,len);
+	
+    avgARR(students,len);
+	struct Student *max=FindavgMax(students,len);
+	PrinStruct(*max);
+ 
+   // 循环输入
+    // for (int i = 0; i < 3; i++) {
+        // printf("\n====== 第 %d 个学生 ======\n", i + 1);
+        // intStruct(&students[i]);  // 传入每个学生的地址
+    // }
+    
+    // 循环输出
+    // printf("\n========== 所有学生信息 ==========\n");
+    // for (int i = 0; i < 3; i++) {
+        // PrinStruct(students[i]);   // 传入每个学生
+    // }
+	
+	
+	return 0;
+}
+```
+
+
+
+------
+
+#### 例题2：按成绩排序
+
+**题目**：在上题基础上，按平均分从高到低排序输出。
+
+c
+
+```
+void avgSort(struct Student *Arr,int len){
+	struct Student tmp;
+	
+	for(int i=0;i<len-1;i++){
+		for(int j=0;j<len-i-1;j++){
+			if((Arr[j].avg)<(Arr[j+1].avg)){
+				tmp=Arr[j+1];
+				Arr[j+1]=Arr[j];
+				Arr[j]=tmp;
+			}
+		}
+	}
+	
+}
+```
+
+
+
+------
+
+#### 例题3：最高分学生（结构体指针作参数）
+
+**题目**：写一个函数，找出平均分最高的学生，返回其指针。
+
+```
+struct Student* FindavgMax(struct Student *s,int len){
+	struct Student *max=s;
+	for(int i=1;i<len;i++){
+			if((s+i)->avg>max->avg){
+				max=s+i;
+			}
+	}
+	return max;
+}
+```
+
+
+
+------
+
+#### 例题4：选票系统（结构体数组 + 指针）
+
+**题目**：有3个候选人，5个人投票，统计每人得票数。
+
+
+
+```
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    char name[20];
+    int votes;
+} Candidate;
+
+int main() {
+    Candidate c[3] = {{"张三", 0}, {"李四", 0}, {"王五", 0}};
+    char name[20];
+    
+    printf("10个人投票，输入候选人姓名:\n");
+    for (int i = 0; i < 10; i++) {
+        scanf("%s", name);
+        for (int j = 0; j < 3; j++) {
+            if (strcmp(name, c[j].name) == 0) {
+                c[j].votes++;
+                break;
+            }
+        }
+    }
+    
+    printf("\n投票结果:\n");
+    for (int i = 0; i < 3; i++) {
+        printf("%s: %d票\n", c[i].name, c[i].votes);
+    }
+    
+    return 0;
+}
+```
+
+
+
+------
+
+#### 例题5：链表入门（结构体自引用）
+
+**题目**：创建一个简单的链表，包含3个节点，并遍历输出。
+
+c
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node *next;
+} Node;
+
+int main() {
+    // 创建3个节点
+    Node *head = (Node*)malloc(sizeof(Node));
+    Node *second = (Node*)malloc(sizeof(Node));
+    Node *third = (Node*)malloc(sizeof(Node));
+    
+    head->data = 10;
+    head->next = second;
+    
+    second->data = 20;
+    second->next = third;
+    
+    third->data = 30;
+    third->next = NULL;
+    
+    // 遍历链表
+    Node *p = head;
+    while (p != NULL) {
+        printf("%d -> ", p->data);
+        p = p->next;
+    }
+    printf("NULL\n");
+    
+    // 释放内存
+    free(head);
+    free(second);
+    free(third);
+    
+    return 0;
+}
+```
+
+
+
+------
+
+#### 例题6：共用体判断大小端
+
+**题目**：用共用体判断当前系统是大端还是小端模式。
+
+```
+#include <stdio.h>
+
+typedef union {
+    int i;
+    char c;
+} EndianTest;
+
+int main() {
+    EndianTest e;
+    e.i = 1;  // 小端：低地址存0x01；大端：低地址存0x00
+    
+    if (e.c == 1) {
+        printf("小端模式\n");
+    } else {
+        printf("大端模式\n");
+    }
+    
+    return 0;
+}
+```
+
+
+
+------
+
+#### 例题7：结构体嵌套（日期 + 学生）
+
+**题目**：定义出生日期结构体，嵌套到学生结构体中，输入输出学生信息。
+
+```
+#include <stdio.h>
+
+typedef struct {
+    int year;
+    int month;
+    int day;
+} Date;
+
+typedef struct {
+    int id;
+    char name[20];
+    Date birthday;
+    float score;
+} Student;
+
+int main() {
+    Student stu;
+    
+    printf("学号: ");
+    scanf("%d", &stu.id);
+    printf("姓名: ");
+    scanf("%s", stu.name);
+    printf("出生日期(年 月 日): ");
+    scanf("%d%d%d", &stu.birthday.year, &stu.birthday.month, &stu.birthday.day);
+    printf("成绩: ");
+    scanf("%f", &stu.score);
+    
+    printf("\n学生信息:\n");
+    printf("%d %s %d-%d-%d %.2f\n", stu.id, stu.name, 
+           stu.birthday.year, stu.birthday.month, stu.birthday.day, stu.score);
+    
+    return 0;
+}
+```
+
+
+
+------
+
+#### 例题8：枚举 + 结构体（学生状态）
+
+**题目**：用枚举表示学生状态（正常、休学、毕业），并输出。
+
+c
+
+```
+#include <stdio.h>
+
+typedef enum {
+    NORMAL,
+    SUSPEND,
+    GRADUATED
+} Status;
+
+typedef struct {
+    int id;
+    char name[20];
+    Status status;
+} Student;
+
+char* getStatusName(Status s) {
+    switch(s) {
+        case NORMAL: return "正常";
+        case SUSPEND: return "休学";
+        case GRADUATED: return "毕业";
+        default: return "未知";
+    }
+}
+
+int main() {
+    Student stu[3] = {
+        {1001, "张三", NORMAL},
+        {1002, "李四", SUSPEND},
+        {1003, "王五", GRADUATED}
+    };
+    
+    for (int i = 0; i < 3; i++) {
+        printf("%d %s %s\n", stu[i].id, stu[i].name, getStatusName(stu[i].status));
+    }
+    
+    return 0;
+}
+```
+
+# 链表
+
+链表是一种重要的动态数据结构，由一系列节点组成，每个节点包含数据和指向下一个节点的指针。
+
+### 1. 链表的基本概念
+
+**优点：**
+
+- 动态内存分配，不需要预知最大长度
+- 插入删除操作高效（只需修改指针）
+- 内存利用率高
+
+**缺点：**
+
+- 不支持随机访问
+- 需要额外存储指针，内存开销大
+- 实现比数组复杂
+
+### 2. 单向链表的基本实现
+
+#### 2.1 节点结构定义
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+// 定义链表节点结构
+typedef struct Node {
+    int data;           // 数据域
+    struct Node* next;  // 指针域
+} Node;
+
+// 或者这样定义（更常见）
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};
+```
+
+
+
+#### 2.2 创建节点
+
+c
+
+```
+// 创建新节点
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("内存分配失败\n");
+        exit(1);
+    }
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+```
+
+### 3. 链表基本操作
+
+#### 3.1 初始化链表
+
+```
+// 初始化空链表
+Node* initList() {
+    return NULL;  // 空链表头指针为NULL
+}
+
+// 带头节点的初始化
+Node* initListWithHead() {
+    Node* head = (Node*)malloc(sizeof(Node));
+    if (head == NULL) return NULL;
+    head->data = 0;      // 头节点数据可以不用
+    head->next = NULL;
+    return head;
+}
+```
+
+#### 3.2 插入操作
+
+```
+// 1. 头插法（在链表头部插入）
+Node* insertAtHead(Node* head, int data) {
+    Node* newNode = createNode(data);
+    newNode->next = head;
+    return newNode;  // 返回新的头节点
+}
+
+// 2. 尾插法（在链表尾部插入）
+Node* insertAtTail(Node* head, int data) {
+    Node* newNode = createNode(data);
+    
+    if (head == NULL) {
+        return newNode;
+    }
+    
+    Node* current = head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    current->next = newNode;
+    return head;
+}
+
+// 3. 在指定位置插入（位置从0开始）
+Node* insertAtPosition(Node* head, int data, int position) {
+    if (position < 0) return head;
+    
+    // 头插法情况
+    if (position == 0) {
+        return insertAtHead(head, data);
+    }
+    
+    Node* newNode = createNode(data);
+    Node* current = head;
+    
+    // 找到要插入位置的前一个节点
+    for (int i = 0; i < position - 1 && current != NULL; i++) {
+        current = current->next;
+    }
+    
+    if (current == NULL) {
+        printf("位置超出链表长度\n");
+        free(newNode);
+        return head;
+    }
+    
+    newNode->next = current->next;
+    current->next = newNode;
+    return head;
+}
+```
+
+#### 3.3 删除操作
+
+```
+// 1. 删除头节点
+Node* deleteAtHead(Node* head) {
+    if (head == NULL) {
+        printf("链表为空\n");
+        return NULL;
+    }
+    
+    Node* temp = head;
+    head = head->next;
+    free(temp);
+    return head;
+}
+
+// 2. 删除指定值的节点（删除第一个匹配的）
+Node* deleteByValue(Node* head, int value) {
+    if (head == NULL) return NULL;
+    
+    // 如果头节点就是要删除的节点
+    if (head->data == value) {
+        return deleteAtHead(head);
+    }
+    
+    Node* current = head;
+    while (current->next != NULL && current->next->data != value) {
+        current = current->next;
+    }
+    
+    if (current->next == NULL) {
+        printf("未找到值为%d的节点\n", value);
+        return head;
+    }
+    
+    Node* temp = current->next;
+    current->next = temp->next;
+    free(temp);
+    return head;
+}
+
+// 3. 删除指定位置的节点
+Node* deleteAtPosition(Node* head, int position) {
+    if (head == NULL || position < 0) return head;
+    
+    if (position == 0) {
+        return deleteAtHead(head);
+    }
+    
+    Node* current = head;
+    for (int i = 0; i < position - 1 && current->next != NULL; i++) {
+        current = current->next;
+    }
+    
+    if (current->next == NULL) {
+        printf("位置超出链表范围\n");
+        return head;
+    }
+    
+    Node* temp = current->next;
+    current->next = temp->next;
+    free(temp);
+    return head;
+}
+```
+
+#### 3.4 查找操作
+
+```
+// 查找指定值的节点
+Node* search(Node* head, int target) {
+    Node* current = head;
+    int position = 0;
+    
+    while (current != NULL) {
+        if (current->data == target) {
+            printf("找到节点: 值=%d, 位置=%d\n", current->data, position);
+            return current;
+        }
+        current = current->next;
+        position++;
+    }
+    
+    printf("未找到值为%d的节点\n", target);
+    return NULL;
+}
+
+// 获取链表长度
+int getLength(Node* head) {
+    int length = 0;
+    Node* current = head;
+    while (current != NULL) {
+        length++;
+        current = current->next;
+    }
+    return length;
+}
+```
+
+
+
+#### 3.5 遍历和打印
+
+c
+
+```
+// 打印链表
+void printList(Node* head) {
+    Node* current = head;
+    printf("链表: ");
+    while (current != NULL) {
+        printf("%d -> ", current->data);
+        current = current->next;
+    }
+    printf("NULL\n");
+}
+
+// 递归方式遍历
+void printListRecursive(Node* head) {
+    if (head == NULL) {
+        printf("NULL\n");
+        return;
+    }
+    printf("%d -> ", head->data);
+    printListRecursive(head->next);
+}
+```
+
+### 4. 链表反转
+
+```
+// 迭代方式反转链表
+Node* reverseList(Node* head) {
+    Node* prev = NULL;
+    Node* current = head;
+    Node* next = NULL;
+    
+    while (current != NULL) {
+        next = current->next;   // 保存下一个节点
+        current->next = prev;   // 反转指针
+        prev = current;         // 移动prev
+        current = next;         // 移动current
+    }
+    return prev;  // 返回新的头节点
+}
+
+// 递归方式反转链表
+Node* reverseListRecursive(Node* head) {
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    
+    Node* newHead = reverseListRecursive(head->next);
+    head->next->next = head;
+    head->next = NULL;
+    return newHead;
+}
+```
+
+### 5. 完整示例程序
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+// 创建节点
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("内存分配失败\n");
+        exit(1);
+    }
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// 尾插法创建链表
+Node* createList(int arr[], int n) {
+    Node* head = NULL;
+    for (int i = 0; i < n; i++) {
+        head = insertAtTail(head, arr[i]);
+    }
+    return head;
+}
+
+// 释放链表内存
+void freeList(Node* head) {
+    Node* current = head;
+    while (current != NULL) {
+        Node* temp = current;
+        current = current->next;
+        free(temp);
+    }
+}
+
+// 主函数演示
+int main() {
+    // 创建链表
+    int arr[] = {1, 2, 3, 4, 5};
+    Node* list = createList(arr, 5);
+    
+    printf("原链表: ");
+    printList(list);
+    printf("链表长度: %d\n", getLength(list));
+    
+    // 头插法
+    list = insertAtHead(list, 0);
+    printf("头插0后: ");
+    printList(list);
+    
+    // 尾插法
+    list = insertAtTail(list, 6);
+    printf("尾插6后: ");
+    printList(list);
+    
+    // 指定位置插入
+    list = insertAtPosition(list, 100, 3);
+    printf("位置3插入100: ");
+    printList(list);
+    
+    // 删除操作
+    list = deleteByValue(list, 3);
+    printf("删除值为3的节点: ");
+    printList(list);
+    
+    list = deleteAtPosition(list, 2);
+    printf("删除位置2的节点: ");
+    printList(list);
+    
+    // 反转链表
+    list = reverseList(list);
+    printf("反转后: ");
+    printList(list);
+    
+    // 查找
+    search(list, 100);
+    
+    // 释放内存
+    freeList(list);
+    
+    return 0;
+}
+```
+
+
+
+### 6. 其他类型链表
+
+#### 6.1 双向链表
+
+c
+
+```
+// 双向链表节点
+typedef struct DNode {
+    int data;
+    struct DNode* prev;
+    struct DNode* next;
+} DNode;
+
+// 创建双向节点
+DNode* createDNode(int data) {
+    DNode* newNode = (DNode*)malloc(sizeof(DNode));
+    newNode->data = data;
+    newNode->prev = NULL;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// 双向链表头插
+DNode* insertAtHeadD(DNode* head, int data) {
+    DNode* newNode = createDNode(data);
+    if (head != NULL) {
+        newNode->next = head;
+        head->prev = newNode;
+    }
+    return newNode;
+}
+```
+
+
+
+#### 6.2 循环链表
+
+c
+
+```
+// 创建循环链表
+Node* createCircularList(int arr[], int n) {
+    if (n == 0) return NULL;
+    
+    Node* head = createNode(arr[0]);
+    Node* tail = head;
+    
+    for (int i = 1; i < n; i++) {
+        tail->next = createNode(arr[i]);
+        tail = tail->next;
+    }
+    
+    tail->next = head;  // 最后一个节点指向头节点
+    return head;
+}
+```
+
+
+
+### 7. 常见问题和技巧
+
+c
+
+```
+// 1. 检测环（快慢指针）
+int hasCycle(Node* head) {
+    if (head == NULL) return 0;
+    
+    Node* slow = head;
+    Node* fast = head;
+    
+    while (fast != NULL && fast->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return 1;
+    }
+    return 0;
+}
+
+// 2. 寻找中间节点（快慢指针）
+Node* findMiddle(Node* head) {
+    if (head == NULL) return NULL;
+    
+    Node* slow = head;
+    Node* fast = head;
+    
+    while (fast != NULL && fast->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+
+// 3. 删除重复节点（已排序链表）
+Node* deleteDuplicates(Node* head) {
+    if (head == NULL) return NULL;
+    
+    Node* current = head;
+    while (current->next != NULL) {
+        if (current->data == current->next->data) {
+            Node* temp = current->next;
+            current->next = temp->next;
+            free(temp);
+        } else {
+            current = current->next;
+        }
+    }
+    return head;
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+# 补充：疑难杂症 
+
+根据你的笔记，第十章应包含以下内容：
+
+------
+
+### 一、补码、反码、进制
+
+#### 1.1 原码、反码、补码
+
+| 类型 | 正数（+5） | 负数（-5） |
+| :--- | :--------- | :--------- |
+| 原码 | 00000101   | 10000101   |
+| 反码 | 00000101   | 11111010   |
+| 补码 | 00000101   | 11111011   |
+
+**规则**：
+
+- 正数：原码 = 反码 = 补码
+- 负数：反码 = 原码符号位不变，其余取反；补码 = 反码 + 1
+- 计算机存储的是**补码**
+
+#### 1.2 进制转换
+
+| 进制     | 前缀                | 示例          |
+| :------- | :------------------ | :------------ |
+| 二进制   | `0b` 或 `0B`（C99） | `0b1010` = 10 |
+| 八进制   | `0`                 | `012` = 10    |
+| 十进制   | 无                  | `10`          |
+| 十六进制 | `0x` 或 `0X`        | `0xA` = 10    |
+
+```
+int a = 0b1010;   // 二进制（C99支持）
+int b = 012;      // 八进制 = 10
+int c = 10;       // 十进制
+int d = 0xA;      // 十六进制 = 10
+
+printf("%d %d %d %d\n", a, b, c, d);  // 10 10 10 10
+```
+
+#### 1.3 数据长度（sizeof）
+
+| 类型        | 32位系统 | 64位系统 |
+| :---------- | :------- | :------- |
+| `char`      | 1        | 1        |
+| `short`     | 2        | 2        |
+| `int`       | 4        | 4        |
+| `long`      | 4        | 8        |
+| `long long` | 8        | 8        |
+| `float`     | 4        | 4        |
+| `double`    | 8        | 8        |
+| `指针`      | 4        | 8        |
+
+------
+
+### 二、自增、自减运算符
+
+| 运算符 | 含义          | 示例       | 结果             |
+| :----- | :------------ | :--------- | :--------------- |
+| `i++`  | 先使用，后加1 | `a = i++;` | a = 原i, i = i+1 |
+| `++i`  | 先加1，后使用 | `a = ++i;` | i = i+1, a = 新i |
+| `i--`  | 先使用，后减1 | `a = i--;` | a = 原i, i = i-1 |
+| `--i`  | 先减1，后使用 | `a = --i;` | i = i-1, a = 新i |
+
+```
+int i = 5;
+int a = i++;  // a=5, i=6
+int b = ++i;  // i=7, b=7
+```
+
+
+
+**常见陷阱**：
+
+```
+int i = 5;
+int a = i++ + ++i;  // 未定义行为！不同编译器结果不同
+// 不要在一个表达式里对同一变量多次自增
+```
+
+
+
+------
+
+### 三、变量的存储方式和生存周期
+
+#### 3.1 存储类别
+
+| 关键字           | 存储位置       | 生命周期 | 作用域     | 初始值 |
+| :--------------- | :------------- | :------- | :--------- | :----- |
+| `auto`（默认）   | 栈             | 代码块内 | 代码块内   | 随机   |
+| `static`（局部） | 静态区         | 整个程序 | 代码块内   | 0      |
+| `static`（全局） | 静态区         | 整个程序 | 本文件内   | 0      |
+| `extern`         | 全局           | 整个程序 | 多文件共享 | 0      |
+| `register`       | 寄存器（建议） | 代码块内 | 代码块内   | 随机   |
+
+#### 3.2 示例
+
+```
+// static局部变量：函数结束不销毁
+void func() {
+    static int count = 0;  // 只初始化一次
+    count++;
+    printf("第%d次调用\n", count);
+}
+
+int main() {
+    func();  // 第1次调用
+    func();  // 第2次调用
+    func();  // 第3次调用
+    return 0;
+}
+```
+
+#### 3.3 static 对全局变量的影响
+
+```
+// file1.c
+int global = 10;        // 可被其他文件访问
+static int hidden = 20; // 只能在本文件访问
+
+// file2.c
+extern int global;      // ✅ 可以访问
+// extern int hidden;   // ❌ 错误，static限制在本文件
+```
+
+------
+
+### 四、内部函数和外部函数
+
+#### 4.1 内部函数（static）
+
+```
+// 只能在当前文件内调用
+static void helper() {
+    printf("内部函数\n");
+}
+```
+
+#### 4.2 外部函数（extern，默认）
+
+```
+// 方式1：不加extern（默认）
+void func1() { }
+
+// 方式2：加extern（显式）
+extern void func2() { }
+
+// 在另一个文件中声明后即可调用
+// extern void func1();  // 声明
+```
+
+#### 4.3 多文件示例
+
+```
+// math.c
+int add(int a, int b) {
+    return a + b;
+}
+
+static int sub(int a, int b) {  // 内部函数，只能在math.c使用
+    return a - b;
+}
+
+// main.c
+#include <stdio.h>
+extern int add(int, int);  // 声明外部函数
+
+int main() {
+    printf("%d\n", add(3, 5));  // ✅ 可以
+    // printf("%d\n", sub(3, 5));  // ❌ 错误，sub不可见
+    return 0;
+}
+```
+
+------
+
+### 五、其他常见疑难杂症
+
+#### 5.1 类型转换（隐式）
+
+```
+int a = 3.14;      // 3（截断）
+double b = 3;      // 3.0
+char c = 65;       // 'A'（ASCII）
+int d = 'A';       // 65
+```
+
+#### 5.2 强制类型转换
+
+```
+int a = 10, b = 3;
+float c = (float)a / b;  // 3.333...（不加(float)会得3）
+```
+
+#### 5.3 逗号运算符
+
+```
+int a = (5, 10);   // a = 10（取最后一个表达式的值）
+int i, j;
+for (i = 0, j = 10; i < j; i++, j--);  // 常用在for循环
+```
+
+#### 5.4 三目运算符
+
+```
+int max = (a > b) ? a : b;  // 如果a>b取a，否则取b
+```
+
+## C语言链表详解
+
+链表是一种重要的动态数据结构，由一系列节点组成，每个节点包含数据和指向下一个节点的指针。
+
+### 1. 链表的基本概念
+
+**优点：**
+
+- 动态内存分配，不需要预知最大长度
+- 插入删除操作高效（只需修改指针）
+- 内存利用率高
+
+**缺点：**
+
+- 不支持随机访问
+- 需要额外存储指针，内存开销大
+- 实现比数组复杂
+
+### 2. 单向链表的基本实现
+
+#### 2.1 节点结构定义
+
+c
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+// 定义链表节点结构
+typedef struct Node {
+    int data;           // 数据域
+    struct Node* next;  // 指针域
+} Node;
+
+// 或者这样定义（更常见）
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};
+```
+
+
+
+#### 2.2 创建节点
+
+c
+
+```
+// 创建新节点
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("内存分配失败\n");
+        exit(1);
+    }
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+```
+
+
+
+### 3. 链表基本操作
+
+#### 3.1 初始化链表
+
+c
+
+```
+// 初始化空链表
+Node* initList() {
+    return NULL;  // 空链表头指针为NULL
+}
+
+// 带头节点的初始化
+Node* initListWithHead() {
+    Node* head = (Node*)malloc(sizeof(Node));
+    if (head == NULL) return NULL;
+    head->data = 0;      // 头节点数据可以不用
+    head->next = NULL;
+    return head;
+}
+```
+
+
+
+#### 3.2 插入操作
+
+c
+
+```
+// 1. 头插法（在链表头部插入）
+Node* insertAtHead(Node* head, int data) {
+    Node* newNode = createNode(data);
+    newNode->next = head;
+    return newNode;  // 返回新的头节点
+}
+
+// 2. 尾插法（在链表尾部插入）
+Node* insertAtTail(Node* head, int data) {
+    Node* newNode = createNode(data);
+    
+    if (head == NULL) {
+        return newNode;
+    }
+    
+    Node* current = head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    current->next = newNode;
+    return head;
+}
+
+// 3. 在指定位置插入（位置从0开始）
+Node* insertAtPosition(Node* head, int data, int position) {
+    if (position < 0) return head;
+    
+    // 头插法情况
+    if (position == 0) {
+        return insertAtHead(head, data);
+    }
+    
+    Node* newNode = createNode(data);
+    Node* current = head;
+    
+    // 找到要插入位置的前一个节点
+    for (int i = 0; i < position - 1 && current != NULL; i++) {
+        current = current->next;
+    }
+    
+    if (current == NULL) {
+        printf("位置超出链表长度\n");
+        free(newNode);
+        return head;
+    }
+    
+    newNode->next = current->next;
+    current->next = newNode;
+    return head;
+}
+```
+
+
+
+#### 3.3 删除操作
+
+c
+
+```
+// 1. 删除头节点
+Node* deleteAtHead(Node* head) {
+    if (head == NULL) {
+        printf("链表为空\n");
+        return NULL;
+    }
+    
+    Node* temp = head;
+    head = head->next;
+    free(temp);
+    return head;
+}
+
+// 2. 删除指定值的节点（删除第一个匹配的）
+Node* deleteByValue(Node* head, int value) {
+    if (head == NULL) return NULL;
+    
+    // 如果头节点就是要删除的节点
+    if (head->data == value) {
+        return deleteAtHead(head);
+    }
+    
+    Node* current = head;
+    while (current->next != NULL && current->next->data != value) {
+        current = current->next;
+    }
+    
+    if (current->next == NULL) {
+        printf("未找到值为%d的节点\n", value);
+        return head;
+    }
+    
+    Node* temp = current->next;
+    current->next = temp->next;
+    free(temp);
+    return head;
+}
+
+// 3. 删除指定位置的节点
+Node* deleteAtPosition(Node* head, int position) {
+    if (head == NULL || position < 0) return head;
+    
+    if (position == 0) {
+        return deleteAtHead(head);
+    }
+    
+    Node* current = head;
+    for (int i = 0; i < position - 1 && current->next != NULL; i++) {
+        current = current->next;
+    }
+    
+    if (current->next == NULL) {
+        printf("位置超出链表范围\n");
+        return head;
+    }
+    
+    Node* temp = current->next;
+    current->next = temp->next;
+    free(temp);
+    return head;
+}
+```
+
+
+
+#### 3.4 查找操作
+
+c
+
+```
+// 查找指定值的节点
+Node* search(Node* head, int target) {
+    Node* current = head;
+    int position = 0;
+    
+    while (current != NULL) {
+        if (current->data == target) {
+            printf("找到节点: 值=%d, 位置=%d\n", current->data, position);
+            return current;
+        }
+        current = current->next;
+        position++;
+    }
+    
+    printf("未找到值为%d的节点\n", target);
+    return NULL;
+}
+
+// 获取链表长度
+int getLength(Node* head) {
+    int length = 0;
+    Node* current = head;
+    while (current != NULL) {
+        length++;
+        current = current->next;
+    }
+    return length;
+}
+```
+
+
+
+#### 3.5 遍历和打印
+
+c
+
+```
+// 打印链表
+void printList(Node* head) {
+    Node* current = head;
+    printf("链表: ");
+    while (current != NULL) {
+        printf("%d -> ", current->data);
+        current = current->next;
+    }
+    printf("NULL\n");
+}
+
+// 递归方式遍历
+void printListRecursive(Node* head) {
+    if (head == NULL) {
+        printf("NULL\n");
+        return;
+    }
+    printf("%d -> ", head->data);
+    printListRecursive(head->next);
+}
+```
+
+
+
+### 4. 链表反转
+
+c
+
+```
+// 迭代方式反转链表
+Node* reverseList(Node* head) {
+    Node* prev = NULL;
+    Node* current = head;
+    Node* next = NULL;
+    
+    while (current != NULL) {
+        next = current->next;   // 保存下一个节点
+        current->next = prev;   // 反转指针
+        prev = current;         // 移动prev
+        current = next;         // 移动current
+    }
+    return prev;  // 返回新的头节点
+}
+
+// 递归方式反转链表
+Node* reverseListRecursive(Node* head) {
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    
+    Node* newHead = reverseListRecursive(head->next);
+    head->next->next = head;
+    head->next = NULL;
+    return newHead;
+}
+```
+
+
+
+### 5. 完整示例程序
+
+c
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+// 创建节点
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("内存分配失败\n");
+        exit(1);
+    }
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// 尾插法创建链表
+Node* createList(int arr[], int n) {
+    Node* head = NULL;
+    for (int i = 0; i < n; i++) {
+        head = insertAtTail(head, arr[i]);
+    }
+    return head;
+}
+
+// 释放链表内存
+void freeList(Node* head) {
+    Node* current = head;
+    while (current != NULL) {
+        Node* temp = current;
+        current = current->next;
+        free(temp);
+    }
+}
+
+// 主函数演示
+int main() {
+    // 创建链表
+    int arr[] = {1, 2, 3, 4, 5};
+    Node* list = createList(arr, 5);
+    
+    printf("原链表: ");
+    printList(list);
+    printf("链表长度: %d\n", getLength(list));
+    
+    // 头插法
+    list = insertAtHead(list, 0);
+    printf("头插0后: ");
+    printList(list);
+    
+    // 尾插法
+    list = insertAtTail(list, 6);
+    printf("尾插6后: ");
+    printList(list);
+    
+    // 指定位置插入
+    list = insertAtPosition(list, 100, 3);
+    printf("位置3插入100: ");
+    printList(list);
+    
+    // 删除操作
+    list = deleteByValue(list, 3);
+    printf("删除值为3的节点: ");
+    printList(list);
+    
+    list = deleteAtPosition(list, 2);
+    printf("删除位置2的节点: ");
+    printList(list);
+    
+    // 反转链表
+    list = reverseList(list);
+    printf("反转后: ");
+    printList(list);
+    
+    // 查找
+    search(list, 100);
+    
+    // 释放内存
+    freeList(list);
+    
+    return 0;
+}
+```
+
+
+
+### 6. 其他类型链表
+
+#### 6.1 双向链表
+
+c
+
+```
+// 双向链表节点
+typedef struct DNode {
+    int data;
+    struct DNode* prev;
+    struct DNode* next;
+} DNode;
+
+// 创建双向节点
+DNode* createDNode(int data) {
+    DNode* newNode = (DNode*)malloc(sizeof(DNode));
+    newNode->data = data;
+    newNode->prev = NULL;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// 双向链表头插
+DNode* insertAtHeadD(DNode* head, int data) {
+    DNode* newNode = createDNode(data);
+    if (head != NULL) {
+        newNode->next = head;
+        head->prev = newNode;
+    }
+    return newNode;
+}
+```
+
+
+
+#### 6.2 循环链表
+
+c
+
+```
+// 创建循环链表
+Node* createCircularList(int arr[], int n) {
+    if (n == 0) return NULL;
+    
+    Node* head = createNode(arr[0]);
+    Node* tail = head;
+    
+    for (int i = 1; i < n; i++) {
+        tail->next = createNode(arr[i]);
+        tail = tail->next;
+    }
+    
+    tail->next = head;  // 最后一个节点指向头节点
+    return head;
+}
+```
+
+
+
+### 7. 常见问题和技巧
+
+c
+
+```
+// 1. 检测环（快慢指针）
+int hasCycle(Node* head) {
+    if (head == NULL) return 0;
+    
+    Node* slow = head;
+    Node* fast = head;
+    
+    while (fast != NULL && fast->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return 1;
+    }
+    return 0;
+}
+
+// 2. 寻找中间节点（快慢指针）
+Node* findMiddle(Node* head) {
+    if (head == NULL) return NULL;
+    
+    Node* slow = head;
+    Node* fast = head;
+    
+    while (fast != NULL && fast->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+
+// 3. 删除重复节点（已排序链表）
+Node* deleteDuplicates(Node* head) {
+    if (head == NULL) return NULL;
+    
+    Node* current = head;
+    while (current->next != NULL) {
+        if (current->data == current->next->data) {
+            Node* temp = current->next;
+            current->next = temp->next;
+            free(temp);
+        } else {
+            current = current->next;
+        }
+    }
+    return head;
+}
+```
+
+
+
+### 
